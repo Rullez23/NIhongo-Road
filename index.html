@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>日本語の道 Nihongo Road</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mist:#EEF0F5; --paper:#FBFBFD; --jade:#27427A; --jade2:#3B63A8; --jade-dark:#1A2E57; --jade-soft:#DCE4F2;
+  --cinnabar:#B83A24; --cin-dark:#8A2B1A; --cin-soft:#F5DCD5; --ink:#1E2629; --muted:#66708A; --gold:#C9952B; --line:#C6CEDD;
+  --han:"Klee One","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;
+  --ui:"Avenir Next","Avenir","Segoe UI","Helvetica Neue",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--mist);color:var(--ink);font-family:var(--ui);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+button:disabled{cursor:default}
+.app{max-width:480px;margin:0 auto;min-height:100vh;position:relative}
+.han{font-family:var(--han)}
+
+/* map header */
+.top{position:sticky;top:0;z-index:5;background:var(--mist);padding:16px 20px 12px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line)}
+.brand .han{font-size:30px;font-weight:700;color:var(--jade);letter-spacing:.08em;line-height:1}
+.brand small{display:block;font-size:13px;color:var(--muted);margin-top:5px}
+.stats{display:flex;gap:6px}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:14px;font-weight:600;white-space:nowrap}
+.chip b{color:var(--gold)}
+.guide{display:flex;gap:10px;align-items:flex-end;margin:4px 0 16px}
+.guide .buddy{width:64px;flex:none}
+.bubble{background:var(--paper);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:12px 14px;font-size:15px;line-height:1.5}
+.map-guide{padding:16px 18px 0;margin:0}
+.scene{position:absolute;width:106px;pointer-events:none}
+.scene.big{width:140px}
+.scene svg,.buddy svg,.walker svg,.cloud svg,.dragon-win svg{display:block;width:100%;height:auto}
+.walker{position:absolute;width:54px;pointer-events:none;z-index:2;animation:hop 2.4s ease-in-out infinite}
+@keyframes hop{0%,80%,100%{transform:translateY(0)}88%{transform:translateY(-6px)}}
+.cloud{position:absolute;width:46px;pointer-events:none}
+.node{z-index:1}
+.sheet-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+.sheet .buddy{width:54px;flex:none;margin-top:-30px}
+.sheet-txt{flex:1;min-width:0}
+.stampwrap{position:relative}
+.stampwrap .buddy{position:absolute;width:82px;right:-66px;bottom:-14px}
+.dragon-win{width:170px;margin:26px auto -10px}
+
+/* map */
+.map{position:relative;margin:10px 0 0}
+.map>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.node{position:absolute;transform:translateX(-50%);width:150px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.seal{width:78px;height:78px;display:grid;place-items:center;position:relative;transition:transform .12s}
+.seal .han{font-size:40px;line-height:1}
+.seal.open{background:var(--jade);color:var(--paper);border-radius:50%;box-shadow:0 5px 0 var(--jade-dark)}
+.seal.open:active{transform:translateY(3px);box-shadow:0 2px 0 var(--jade-dark)}
+.seal.done{background:var(--cinnabar);color:#FBEDE8;border-radius:16px;transform:rotate(-4deg);box-shadow:0 5px 0 var(--cin-dark)}
+.seal.done::after{content:"";position:absolute;inset:5px;border:2px solid rgba(255,240,235,.5);border-radius:11px}
+.seal.locked{background:var(--paper);color:#B3C2BB;border:2px dashed var(--line);border-radius:50%}
+.seal.cur::before{content:"";position:absolute;inset:-9px;border-radius:50%;border:3px solid var(--jade2);animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{from{transform:scale(.92);opacity:.9}to{transform:scale(1.28);opacity:0}}
+.stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-top:9px}
+.stars span,.bigstars span{color:var(--line)}
+.nm{font-weight:700;font-size:15px;margin-top:8px}
+.tp{font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.locked-label .nm{color:var(--muted)}
+.foot{text-align:center;padding:10px 0 40px}
+.link{color:var(--muted);text-decoration:underline;font-size:14px;padding:8px}
+
+/* lesson chrome */
+.bar{display:flex;align-items:center;gap:12px;padding:14px 18px;position:sticky;top:0;background:var(--mist);z-index:4}
+.x{width:36px;height:36px;border-radius:50%;font-size:26px;line-height:1;color:var(--muted)}
+.prog{flex:1;height:12px;background:var(--jade-soft);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--jade2);border-radius:99px;transition:width .35s}
+.count{font-size:14px;color:var(--muted);font-weight:600;min-width:38px;text-align:right}
+.hearts{color:var(--cinnabar);font-size:20px;letter-spacing:1px}
+.hearts .lost{color:var(--line)}
+.screen{padding:6px 20px 220px}
+.intro{font-size:15px;line-height:1.55;margin:4px 0 16px;color:var(--ink);background:var(--paper);border-left:4px solid var(--jade2);padding:12px 14px;border-radius:0 12px 12px 0}
+
+/* learn card */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:28px 20px 24px;text-align:center}
+.card .big{display:block;margin:0 auto;line-height:1.15;color:var(--ink)}
+.py{font-size:24px;color:var(--jade);font-weight:600;margin-top:10px}
+.en{font-size:19px;margin-top:4px}
+.note{font-size:14.5px;line-height:1.5;color:var(--muted);margin:14px auto 0;max-width:32ch}
+.speak{margin-top:18px;display:inline-flex;align-items:center;gap:8px;border:2px solid var(--jade-soft);color:var(--jade);font-weight:600;padding:8px 16px;border-radius:99px}
+.speak svg,.mini svg{width:18px;height:18px}
+.skip{display:block;margin:16px auto 0}
+.speakrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.qbig+.speakrow,.play+.speakrow{margin-top:4px}
+
+/* dock */
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:var(--mist);border-top:1px solid var(--line);display:flex;gap:10px;z-index:6}
+.btn{flex:1;display:block;width:100%;padding:15px;border-radius:14px;background:var(--jade);color:#fff;font-weight:700;font-size:17px;box-shadow:0 4px 0 var(--jade-dark)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--jade-dark)}
+.btn.red{background:var(--cinnabar);box-shadow:0 4px 0 var(--cin-dark)}
+.btn.ghost{background:var(--paper);color:var(--jade);box-shadow:0 4px 0 var(--line);flex:.55}
+.btn:disabled{background:#C7D3CD;box-shadow:0 4px 0 #AEBDB5;color:#F1F5F2}
+.btn.ghost:disabled{background:var(--paper);color:#B3C2BB}
+
+/* quiz */
+.combo{display:inline-block;font-size:13px;font-weight:700;color:var(--gold);border:2px solid var(--gold);border-radius:99px;padding:2px 10px;margin-bottom:8px}
+.prompt{font-size:21px;line-height:1.35;font-weight:700;margin:4px 0 14px}
+.qbig{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px;text-align:center;position:relative}
+.qbig>span{display:block;line-height:1.2}
+.qbig small{display:block;font-size:18px;color:var(--jade);margin-top:6px;font-weight:600}
+.mini{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;background:var(--jade-soft);color:var(--jade);display:grid;place-items:center}
+.play{display:grid;place-items:center;width:120px;height:120px;margin:10px auto;border-radius:50%;background:var(--jade);color:var(--paper);box-shadow:0 6px 0 var(--jade-dark)}
+.play svg{width:52px;height:52px}
+.play:active{transform:translateY(3px);box-shadow:0 3px 0 var(--jade-dark)}
+.opts{display:grid;gap:10px;margin-top:18px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:14px 12px;font-size:16.5px;line-height:1.3;text-align:center;min-height:58px;box-shadow:0 3px 0 var(--line)}
+.opt.hanopt{font-family:var(--han);font-size:25px}
+.opt:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.opt.right{border-color:var(--jade2);background:var(--jade-soft);box-shadow:0 3px 0 var(--jade2)}
+.opt.wrong{border-color:var(--cinnabar);background:var(--cin-soft);box-shadow:0 3px 0 var(--cinnabar)}
+.target{font-size:18px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px;line-height:1.4}
+.slot{min-height:72px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;padding:14px 0 10px;margin-top:6px}
+.slot.right{border-color:var(--jade2)} .slot.wrong{border-color:var(--cinnabar)}
+.bank{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:22px}
+.tile{font-family:var(--han);font-size:23px;padding:8px 14px;background:var(--paper);border:2px solid var(--line);border-radius:12px;box-shadow:0 3px 0 var(--line)}
+.tile.used{visibility:hidden}
+
+/* feedback sheet */
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:480px;padding:18px 20px calc(18px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;z-index:7;animation:rise .22s ease-out}
+@keyframes rise{from{transform:translate(-50%,100%)}to{transform:translate(-50%,0)}}
+.sheet.ok{background:var(--jade-soft)} .sheet.no,.sheet.bad{background:var(--cin-soft)}
+.fb-h{display:flex;align-items:baseline;gap:10px;font-weight:700;font-size:22px}
+.sheet.ok .fb-h{color:var(--jade)} .sheet.no .fb-h,.sheet.bad .fb-h{color:var(--cinnabar)}
+.fb-h small{font-size:14px;font-weight:600;opacity:.85}
+.fb-h .xp{margin-left:auto;color:var(--gold);font-size:15px}
+.fb-b{font-size:15.5px;line-height:1.5;margin-top:6px}
+.fb-b .han{font-size:20px}
+
+/* result */
+.result{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px 60px}
+.stamp{width:150px;height:150px;display:grid;place-items:center;font-size:84px;background:var(--cinnabar);color:#FBEDE8;border-radius:28px;position:relative;transform:rotate(-6deg);box-shadow:0 8px 0 var(--cin-dark)}
+.stamp::after{content:"";position:absolute;inset:9px;border:3px solid rgba(255,240,235,.5);border-radius:20px}
+.stamp.in{animation:stamp .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes stamp{0%{transform:scale(2.2) rotate(-14deg);opacity:0}60%{opacity:1}100%{transform:scale(1) rotate(-6deg)}}
+.result.fail .stamp{background:var(--paper);color:var(--cinnabar);border:3px dashed var(--cinnabar);box-shadow:none}
+.result.fail .stamp::after{display:none}
+.result h2{font-size:26px;margin-top:34px}
+.result p{font-size:16px;color:var(--muted);margin-top:8px;line-height:1.5;max-width:30ch}
+.bigstars{font-size:40px;color:var(--gold);letter-spacing:6px;margin-top:10px}
+.actions{width:100%;max-width:340px;display:grid;gap:12px;margin-top:30px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.tools{display:flex;gap:8px;flex-wrap:wrap;padding:12px 18px 0 92px}
+.tool{background:var(--paper);border:1.5px solid var(--jade2);color:var(--jade);font-weight:700;font-size:14px;padding:8px 14px;border-radius:99px}
+.tool.warn{border-color:var(--cinnabar);color:var(--cinnabar)}
+.stats{flex-wrap:wrap;justify-content:flex-end}.brand small{white-space:nowrap}
+.no-tag{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-align:left;margin:-12px 0 2px}
+.en2{font-size:14.5px;color:var(--muted);margin-top:3px}
+.pyin{width:100%;margin-top:16px;font-size:22px;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--paper);font-family:var(--ui);color:var(--ink);text-align:center}
+.pyin:focus{outline:none;border-color:var(--jade2)}
+.pyin.right{border-color:var(--jade2);background:var(--jade-soft)}
+.pyin.wrong{border-color:var(--cinnabar);background:var(--cin-soft)}
+.pyin.almost{border-color:var(--gold);background:#F6E9C8}
+.hint{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.45;text-align:center}
+.sheet.mid{background:#F6E9C8}.sheet.mid .fb-h{color:#8A6514}
+.ltitle{flex:1;font-weight:700;font-size:18px}.ltitle small{display:block;font-weight:500;font-size:13px;color:var(--muted)}
+.toggles{display:flex;gap:8px;margin:4px 0 6px}
+.tog{flex:1;padding:10px;border-radius:12px;border:2px solid var(--line);background:var(--paper);font-weight:700;font-size:14px;color:var(--muted)}
+.tog.on{border-color:var(--jade2);background:var(--jade-soft);color:var(--jade)}
+.list .hint{text-align:left;margin:6px 0 10px}
+.row{display:grid;grid-template-columns:28px 68px 1fr 1.25fr;gap:8px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--line)}
+.row.head{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--line)}
+.no{font-size:12px;color:var(--muted);text-align:right}
+.lh{font-family:var(--han);font-size:24px;text-align:left}
+.lp{font-size:15px;color:var(--jade);font-weight:600;text-align:left;min-height:32px}
+.la{font-size:14.5px;text-align:left;line-height:1.3;min-height:32px}
+.hid{background:var(--jade-soft);border-radius:8px;position:relative}
+.hid::after{content:"tap";position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:12px;font-weight:600}
+
+.regions{display:flex;gap:6px;padding:12px 14px 0}
+.rtab{flex:1;min-width:0;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:7px 4px;text-align:center}
+.rtab .han{display:block;font-size:16px;font-weight:600;white-space:nowrap}
+.rtab small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.rtab.on{background:var(--jade);border-color:var(--jade);color:#fff}.rtab.on small{color:#D6E0F3}
+.twin{margin-top:8px;font-size:16px;color:var(--muted)}.twin .han{font-size:26px;color:var(--ink);margin-left:4px}
+.rds{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.rd{background:var(--jade-soft);border-radius:10px;padding:6px 12px;font-size:17px}.rd span{font-size:12px;font-weight:700;color:var(--jade);margin-right:6px;text-transform:uppercase}
+.ex{margin:16px auto 0;border-top:1px dashed var(--line);padding-top:12px}
+.ex small{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.exw{font-size:34px;margin-top:2px}.exr{font-size:16px;color:var(--jade);font-weight:600}.exr .han{font-size:19px}.exm{font-size:15px;margin-top:2px}
+.qbig small.han{font-size:20px}
+.lgroup{font-size:16px;margin:18px 0 8px}.lgroup small{font-weight:500;color:var(--muted);font-size:13px}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.kgrid.words{grid-template-columns:1fr 1fr}
+.kcell{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.kcell .han{font-size:28px;line-height:1.2}.words .kcell .han{font-size:21px}
+.kcell small{font-size:12.5px;color:var(--jade);font-weight:600;min-height:17px;min-width:40px;border-radius:6px}
+.kcell small.hid::after{content:"?"}
+.row.kr{grid-template-columns:56px 1fr 1.2fr}
+.row.kr .lh{font-size:32px}.row.kr .la{font-size:14px}.row.kr .on{color:var(--jade)}
+.row.kr .la small{font-size:13px;color:var(--muted)}
+.fb-h{flex-wrap:wrap;row-gap:2px}.fb-h .han{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="app" id="app" lang="ja"></div>
+<script>
+/* ---------------- illustrations (original artwork) ---------------- */
+// 小文 Xiǎo Wén, the guide: a young scholar with a jade hairpin and a scroll
+function guy(mood='calm'){
+  const skin='#F7DCC6', hair='#33261F', robe='#2E7D69', robeD='#1F5C4F', cream='#EAF2ED';
+  let eyes, mouth, extra='';
+  if(mood==='happy'){
+    eyes=`<path d="M42 70 Q48 62 54 70 M66 70 Q72 62 78 70" stroke="${hair}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`;
+    mouth=`<path d="M52 80 Q60 92 68 80 Z" fill="#8A2B1A"/><path d="M55.5 85 Q60 89 64.5 85 Q60 83 55.5 85Z" fill="#E7756A"/>`;
+    extra=`<path d="M101 30 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M15 40 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z" fill="#C9952B"/>`;
+  } else if(mood==='oops'){
+    eyes=`<ellipse cx="48" cy="70" rx="4.2" ry="5.2" fill="${hair}"/><ellipse cx="72" cy="70" rx="4.2" ry="5.2" fill="${hair}"/>
+      <circle cx="49.6" cy="68" r="1.6" fill="#fff"/><circle cx="73.6" cy="68" r="1.6" fill="#fff"/>
+      <path d="M41 62 L53 58 M79 62 L67 58" stroke="${hair}" stroke-width="2.6" stroke-linecap="round"/>`;
+    mouth=`<ellipse cx="60" cy="84" rx="3.6" ry="4.2" fill="#8A2B1A"/>`;
+    extra=`<path d="M92 42 Q97 51 92 55 Q87 51 92 42Z" fill="#8EC3DA"/>`;
+  } else {
+    eyes=`<ellipse cx="48" cy="70" rx="4.2" ry="5.2" fill="${hair}"/><ellipse cx="72" cy="70" rx="4.2" ry="5.2" fill="${hair}"/>
+      <circle cx="49.6" cy="68" r="1.6" fill="#fff"/><circle cx="73.6" cy="68" r="1.6" fill="#fff"/>
+      <path d="M42 60 Q47 57 53 59 M67 59 Q73 57 78 60" stroke="${hair}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    mouth=`<path d="M55 81 Q60 86 65 81" stroke="#8A2B1A" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  }
+  return `<svg viewBox="0 0 120 160" aria-hidden="true">
+  <ellipse cx="60" cy="152" rx="30" ry="5" fill="#1F5C4F" opacity=".15"/>
+  <ellipse cx="49" cy="147" rx="9" ry="5" fill="#3A2C26"/><ellipse cx="71" cy="147" rx="9" ry="5" fill="#3A2C26"/>
+  <path d="M40 94 Q60 88 80 94 L92 144 Q60 150 28 144 Z" fill="${robe}"/>
+  <path d="M30 137 Q60 143 90 137 L92 144 Q60 150 28 144Z" fill="#C9952B"/>
+  <path d="M50 91 L60 110 L70 91 Z" fill="${cream}"/>
+  <path d="M50 91 L66 114 L72 110 L57 91Z" fill="${robeD}"/>
+  <rect x="36" y="112" width="48" height="8" rx="2" fill="#C9952B"/>
+  <circle cx="60" cy="116" r="4" fill="#B83A24"/><path d="M59 120 L56 134 M61 120 L64 134" stroke="#B83A24" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M42 96 Q24 104 22 127 Q31 134 41 127 L45 104Z" fill="${robe}"/>
+  <path d="M22 127 Q31 134 41 127 L41 123 Q31 129 22.5 123Z" fill="${cream}"/>
+  <path d="M78 96 Q96 104 98 127 Q89 134 79 127 L75 104Z" fill="${robe}"/>
+  <path d="M98 127 Q89 134 79 127 L79 123 Q89 129 97.5 123Z" fill="${cream}"/>
+  <g transform="rotate(-22 89 128)"><rect x="84" y="108" width="11" height="30" rx="2" fill="#F5EBD3"/>
+    <rect x="82" y="106" width="15" height="4" rx="2" fill="#B83A24"/><rect x="82" y="136" width="15" height="4" rx="2" fill="#B83A24"/>
+    <path d="M87 115 h5 M87 120 h5 M87 125 h4" stroke="#8A5A3C" stroke-width="1.2"/></g>
+  <circle cx="31" cy="131" r="6" fill="${skin}"/><circle cx="89" cy="131" r="6" fill="${skin}"/>
+  <rect x="55" y="86" width="10" height="8" fill="${skin}"/>
+  <circle cx="60" cy="22" r="13" fill="${hair}"/>
+  <path d="M42 18 L80 25" stroke="#8FC3B0" stroke-width="3.5" stroke-linecap="round"/><circle cx="80.5" cy="25" r="3.6" fill="#C9952B"/>
+  <ellipse cx="60" cy="60" rx="39" ry="37" fill="${hair}"/>
+  <circle cx="25" cy="69" r="6" fill="${skin}"/><circle cx="95" cy="69" r="6" fill="${skin}"/>
+  <ellipse cx="60" cy="66" rx="34" ry="32" fill="${skin}"/>
+  <path d="M26 64 Q25 30 60 28 Q95 30 94 64 Q89 48 77 44 Q71 53 60 46 Q49 53 43 44 Q31 48 26 64Z" fill="${hair}"/>
+  <path d="M50 32 Q60 36 70 32" stroke="#B83A24" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="40" cy="79" rx="6" ry="3.5" fill="#F2A399" opacity=".75"/><ellipse cx="80" cy="79" rx="6" ry="3.5" fill="#F2A399" opacity=".75"/>
+  ${eyes}${mouth}${extra}</svg>`;
+}
+const CLOUD = `<svg viewBox="0 0 56 30" aria-hidden="true"><path d="M10 22 Q4 22 6 16 Q8 11 14 13 Q17 5 27 7 Q35 3 40 11 Q50 10 50 18 Q52 24 44 24 L12 24Z" fill="#fff" opacity=".9"/><path d="M18 18 Q24 14 30 18" stroke="#CFE0D7" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+function bambooStalks(list){
+  return list.map(([x,h,c])=>{ const y=78-h; let segs='';
+    for(let yy=y+12; yy<76; yy+=13) segs+=`<rect x="${x-.5}" y="${yy}" width="7" height="2" rx="1" fill="#1F5C4F" opacity=".55"/>`;
+    return `<rect x="${x}" y="${y}" width="6" height="${h}" rx="3" fill="${c}"/>${segs}
+      <ellipse cx="${x+12}" cy="${y+8}" rx="9" ry="2.8" fill="#7FBF9A" transform="rotate(-28 ${x+12} ${y+8})"/>
+      <ellipse cx="${x-6}" cy="${y+20}" rx="8" ry="2.6" fill="#5FA383" transform="rotate(30 ${x-6} ${y+20})"/>`; }).join('');
+}
+const SCENES = {
+  valley:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><circle cx="76" cy="20" r="10" fill="#F2C14E"/>
+    <path d="M0 72 L28 28 L44 50 L60 24 L100 72 Z" fill="#8DBBA6"/>
+    <path d="M28 28 L22 38 L28 35 L33 40 Z M60 24 L54 34 L60 31 L66 35Z" fill="#fff" opacity=".9"/>
+    <path d="M0 76 L20 52 L38 66 L62 44 L100 76 Z" fill="#2E7D69"/>
+    <path d="M8 64 Q28 58 48 64 T92 64" stroke="#fff" stroke-width="2" fill="none" opacity=".65" stroke-linecap="round"/>
+    <path d="M14 14 q4 -4 8 0 M84 40 q3 -3 6 0" stroke="#33261F" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
+  bamboo:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><ellipse cx="50" cy="77" rx="48" ry="3" fill="#1F5C4F" opacity=".15"/>
+    ${bambooStalks([[14,58,'#5FA383'],[28,74,'#2E7D69'],[44,60,'#3E8E6F'],[58,76,'#2E7D69'],[74,62,'#5FA383'],[86,50,'#3E8E6F']])}</svg>`,
+  gate:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="18" y="28" width="7" height="46" fill="#B83A24"/><rect x="75" y="28" width="7" height="46" fill="#B83A24"/>
+    <rect x="14" y="36" width="72" height="5" fill="#B83A24"/><rect x="15" y="72" width="13" height="5" rx="1" fill="#5B4A3F"/><rect x="72" y="72" width="13" height="5" rx="1" fill="#5B4A3F"/>
+    <path d="M3 27 Q11 28 15 21 L85 21 Q89 28 97 27 L91 31 L9 31 Z" fill="#1F5C4F"/><rect x="20" y="16" width="60" height="6" rx="2" fill="#2E7D69"/>
+    <rect x="39" y="41" width="22" height="13" rx="1.5" fill="#C9952B"/><text x="50" y="51.5" font-size="10" text-anchor="middle" fill="#8A2B1A" font-family="serif">好</text></svg>`,
+  market:()=>{ let aw=''; for(let i=0;i<6;i++){ const x=14+i*12, f=i%2?'#F8FAF7':'#B83A24'; aw+=`<rect x="${x}" y="26" width="12" height="11" fill="${f}"/><path d="M${x} 37 a6 6 0 0 0 12 0Z" fill="${f}"/>`; }
+    const lan=x=>`<line x1="${x}" y1="37" x2="${x}" y2="43" stroke="#5B4A3F" stroke-width="1.2"/><ellipse cx="${x}" cy="50" rx="5.5" ry="7" fill="#B83A24"/><rect x="${x-3.5}" y="42.5" width="7" height="2" fill="#C9952B"/><rect x="${x-3.5}" y="55.5" width="7" height="2" fill="#C9952B"/><line x1="${x}" y1="57" x2="${x}" y2="63" stroke="#C9952B" stroke-width="1.5"/>`;
+    return `<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="20" y="37" width="60" height="39" fill="#F8FAF7" stroke="#BCCDC4"/>${aw}
+    <rect x="20" y="58" width="60" height="18" fill="#8A5A3C"/><circle cx="32" cy="55" r="4" fill="#E89A3C"/><circle cx="40" cy="55" r="4" fill="#E89A3C"/><circle cx="36" cy="50" r="4" fill="#E89A3C"/>
+    <ellipse cx="60" cy="55" rx="5" ry="3.5" fill="#F5EBD3"/><ellipse cx="70" cy="55" rx="5" ry="3.5" fill="#F5EBD3"/><text x="50" y="71" font-size="9" text-anchor="middle" fill="#F2C14E" font-family="serif">一二三</text>${lan(12)}${lan(88)}</svg>`; },
+  village:()=>`<svg viewBox="0 0 100 80" aria-hidden="true">${bambooStalks([[88,56,'#5FA383']])}
+    <rect x="8" y="42" width="44" height="34" fill="#F8FAF7" stroke="#BCCDC4"/><path d="M2 44 Q7 44 10 37 L50 37 Q53 44 58 44 L54 47 L6 47Z" fill="#33403F"/>
+    <rect x="24" y="58" width="12" height="18" rx="1" fill="#8A5A3C"/><circle cx="16" cy="55" r="4" fill="#CFE0D7" stroke="#8A5A3C"/><circle cx="44" cy="55" r="4" fill="#CFE0D7" stroke="#8A5A3C"/>
+    <rect x="56" y="52" width="30" height="24" fill="#F8FAF7" stroke="#BCCDC4"/><path d="M51 54 Q55 54 58 48 L84 48 Q87 54 91 54 L88 57 L54 57Z" fill="#33403F"/>
+    <rect x="66" y="63" width="10" height="13" rx="1" fill="#8A5A3C"/><ellipse cx="60" cy="62" rx="3" ry="4" fill="#B83A24"/><line x1="60" y1="57" x2="60" y2="58" stroke="#5B4A3F"/>
+    <rect x="0" y="76" width="100" height="3" rx="1.5" fill="#BCCDC4"/></svg>`,
+  pagoda:()=>{ const roof=(y,w)=>`<path d="M${50-w} ${y} Q${50-w+6} ${y} ${50-w+8} ${y-5} L${50+w-8} ${y-5} Q${50+w-6} ${y} ${50+w} ${y} L${50+w-4} ${y+3} L${50-w+4} ${y+3}Z" fill="#B83A24"/>`;
+    return `<svg viewBox="0 0 100 80" aria-hidden="true"><circle cx="16" cy="18" r="8" fill="#F2C14E"/><path d="M84 10 A8 8 0 1 0 91 24 A6 6 0 1 1 84 10Z" fill="#F2D88A"/>
+    <line x1="50" y1="6" x2="50" y2="22" stroke="#C9952B" stroke-width="2"/><circle cx="50" cy="7" r="2.5" fill="#C9952B"/>
+    <rect x="44" y="26" width="12" height="13" fill="#F5EBD3"/>${roof(26,13)}<rect x="41" y="42" width="18" height="15" fill="#F5EBD3"/>${roof(42,18)}
+    <rect x="37" y="60" width="26" height="16" fill="#F5EBD3"/>${roof(60,23)}<rect x="46" y="66" width="8" height="10" rx="4" fill="#8A5A3C"/>
+    <rect x="47" y="30" width="6" height="6" fill="#1F5C4F"/><rect x="47" y="46" width="6" height="7" fill="#1F5C4F"/><rect x="30" y="76" width="40" height="3" rx="1" fill="#BCCDC4"/></svg>`; },
+  river:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><path d="M0 46 L18 32 L34 44 L52 28 L72 44 L86 36 L100 46 Z" fill="#B9D3C6"/>
+    <rect x="0" y="46" width="100" height="32" rx="3" fill="#9CC7DA"/>
+    <path d="M0 66 Q12 62 25 66 T50 66 T75 66 T100 66" stroke="#fff" stroke-width="2" fill="none" opacity=".7"/>
+    <path d="M6 73 Q18 69 31 73 T56 73 T81 73" stroke="#6FAAC4" stroke-width="2" fill="none"/>
+    <line x1="50" y1="20" x2="50" y2="53" stroke="#5B4A3F" stroke-width="2"/><path d="M51.5 22 Q66 33 51.5 49 Z" fill="#F5EBD3"/>
+    <path d="M28 53 L72 53 Q66 63 50 63 Q34 63 28 53Z" fill="#8A5A3C"/><circle cx="38" cy="49" r="3" fill="#F7DCC6"/><path d="M33 47 L38 42 L43 47Z" fill="#C9952B"/></svg>`,
+  bridge:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="0" y="58" width="100" height="20" rx="3" fill="#9CC7DA"/>
+    <path d="M16 58 Q50 90 84 58" stroke="#fff" stroke-width="2" fill="none" opacity=".6"/>
+    <path d="M2 60 Q50 12 98 60 L84 60 Q50 26 16 60 Z" fill="#F8FAF7" stroke="#8FA79C" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M12 46 Q50 6 88 46" stroke="#B83A24" stroke-width="2.5" fill="none"/>
+    <path d="M22 37 v-6 M36 27 v-6 M50 24 v-6 M64 27 v-6 M78 37 v-6" stroke="#B83A24" stroke-width="2" stroke-linecap="round"/>
+    <text x="50" y="12" font-size="12" text-anchor="middle" fill="#C9952B" font-weight="700" font-family="sans-serif">?</text></svg>`,
+  city:()=>{ const b=[[4,14,30,'#8DBBA6'],[16,16,46,'#2E7D69'],[30,12,26,'#5FA383'],[40,18,60,'#1F5C4F'],[56,14,36,'#8DBBA6'],[68,16,50,'#2E7D69'],[82,14,30,'#5FA383']];
+    return `<svg viewBox="0 0 100 80" aria-hidden="true">${b.map(([x,w,h,c])=>{ let win=''; for(let y=80-h+5;y<72;y+=7) win+=`<rect x="${x+3}" y="${y}" width="2.6" height="3" fill="#F2D88A" opacity=".85"/><rect x="${x+w-5.6}" y="${y}" width="2.6" height="3" fill="#F2D88A" opacity=".85"/>`; return `<rect x="${x}" y="${78-h}" width="${w}" height="${h}" fill="${c}"/>${win}`; }).join('')}
+    <path d="M36 20 Q40 20 41 16 L57 16 Q58 20 62 20 L59 22 L39 22Z" fill="#B83A24"/><rect x="0" y="76" width="100" height="3" rx="1" fill="#33403F"/></svg>`; },
+  dragon:()=>`<svg viewBox="0 0 150 110" aria-hidden="true">
+    <path d="M18 98 Q14 88 28 90 Q34 80 46 86 Q56 80 60 92 Q72 92 66 100 L24 101 Q12 101 18 98Z" fill="#fff" opacity=".9"/>
+    <path d="M30 88 C46 56 66 98 86 68 S120 48 108 34" stroke="#B83A24" stroke-width="16" fill="none" stroke-linecap="round"/>
+    <path d="M30 88 C46 56 66 98 86 68 S120 48 108 34" stroke="#F2C14E" stroke-width="5" fill="none" stroke-dasharray="3 5" stroke-linecap="round"/>
+    <path d="M30 88 Q14 94 10 82 Q20 84 22 74 Q28 84 30 88Z" fill="#F2C14E"/>
+    <path d="M57 80 l-5 11 M57 80 l1 12 M57 80 l7 9 M92 62 l-3 12 M92 62 l3 11 M92 62 l8 8" stroke="#8A2B1A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M100 26 Q86 20 88 32 Q82 37 94 40 Z" fill="#F2C14E"/>
+    <path d="M104 20 Q98 6 91 8 Q100 12 100 22Z M115 18 Q113 4 106 2 Q112 8 110 20Z" fill="#F2C14E"/>
+    <ellipse cx="112" cy="30" rx="17" ry="13" fill="#B83A24"/><ellipse cx="126" cy="36" rx="11" ry="8" fill="#D9573C"/>
+    <circle cx="132" cy="32" r="1.6" fill="#8A2B1A"/><path d="M119 41 Q127 46 135 40" stroke="#8A2B1A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <circle cx="114" cy="27" r="5.2" fill="#fff"/><circle cx="115.6" cy="27.4" r="2.7" fill="#1E2629"/><circle cx="116.6" cy="26.2" r="1" fill="#fff"/>
+    <path d="M129 30 Q140 18 147 25 M131 41 Q143 50 147 41" stroke="#F2C14E" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="138" cy="66" r="7" fill="#F8FAF7" stroke="#C9952B" stroke-width="2.5"/><path d="M135 64 q2 -2 4 0" stroke="#9CC7DA" stroke-width="1.5" fill="none"/></svg>`
+};
+
+
+
+/* ---------------- extra scenery for this road ---------------- */
+Object.assign(SCENES,{
+  teahouse:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><ellipse cx="50" cy="77" rx="46" ry="3" fill="#1F5C4F" opacity=".15"/>
+    <path d="M82 30 q-4 -6 0 -12 M89 32 q-4 -6 0 -12" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M26 46 Q11 52 23 66" stroke="#1F5C4F" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M62 52 Q74 46 78 36 L83 38 Q79 52 64 61Z" fill="#2E7D69"/>
+    <ellipse cx="44" cy="56" rx="22" ry="18" fill="#2E7D69"/><path d="M24 58 Q44 65 64 58" stroke="#C9952B" stroke-width="2.4" fill="none"/>
+    <ellipse cx="44" cy="39" rx="10" ry="4" fill="#1F5C4F"/><circle cx="44" cy="34" r="3.2" fill="#C9952B"/>
+    <path d="M73 62 L91 62 L88 75 L76 75Z" fill="#F8FAF7" stroke="#BCCDC4"/><path d="M75 66 L89 66" stroke="#B83A24" stroke-width="2"/>
+    <path d="M2 66 Q13 82 24 66Z" fill="#B83A24"/><ellipse cx="13" cy="66" rx="11" ry="4" fill="#fff"/></svg>`,
+  weather:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><circle cx="70" cy="24" r="12" fill="#F2C14E"/>
+    <path d="M70 6 v-4 M86 24 h4 M83 11 l3 -3 M83 37 l3 3" stroke="#F2C14E" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M16 48 Q6 48 9 39 Q12 31 22 33 Q26 21 40 24 Q52 18 57 31 Q69 31 67 41 Q67 48 58 48Z" fill="#fff"/>
+    <path d="M22 42 Q30 38 38 42" stroke="#CFE0D7" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M22 56 l-3 8 M34 56 l-3 8 M46 56 l-3 8 M28 68 l-3 8 M40 68 l-3 8" stroke="#6FAAC4" stroke-width="3" stroke-linecap="round"/>
+    <rect x="82" y="44" width="7" height="24" rx="3.5" fill="#F8FAF7" stroke="#B83A24" stroke-width="1.5"/><rect x="84" y="54" width="3" height="14" fill="#B83A24"/><circle cx="85.5" cy="70" r="5" fill="#B83A24"/></svg>`,
+  scroll:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="16" y="17" width="62" height="50" fill="#F5EBD3" stroke="#D8C9A3"/>
+    <rect x="10" y="12" width="74" height="7" rx="3.5" fill="#8A5A3C"/><rect x="10" y="65" width="74" height="7" rx="3.5" fill="#8A5A3C"/>
+    <text x="47" y="38" font-size="13" text-anchor="middle" fill="#1E2629" font-family="serif">的 了 和</text>
+    <text x="47" y="57" font-size="13" text-anchor="middle" fill="#1E2629" font-family="serif">很 太 都</text>
+    <rect x="66" y="52" width="8" height="8" fill="#B83A24"/>
+    <path d="M86 16 L95 60" stroke="#8A5A3C" stroke-width="3" stroke-linecap="round"/><path d="M93 58 L98 72 L91 61Z" fill="#1E2629"/></svg>`,
+  night:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><path d="M80 6 A11 11 0 1 0 92 26 A8.5 8.5 0 1 1 80 6Z" fill="#F2D88A"/>
+    <path d="M18 12 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z M50 6 l1 2.5 2.5 1 -2.5 1 -1 2.5 -1 -2.5 -2.5 -1 2.5 -1z" fill="#C9952B"/>
+    <rect x="14" y="44" width="58" height="32" fill="#F8FAF7" stroke="#BCCDC4"/><path d="M7 46 Q12 46 16 38 L70 38 Q74 46 79 46 L75 49 L11 49Z" fill="#33403F"/>
+    <rect x="22" y="54" width="18" height="13" fill="#F2C14E"/><path d="M31 54 v13 M22 60.5 h18" stroke="#8A5A3C" stroke-width="1.5"/>
+    <rect x="50" y="58" width="12" height="18" rx="1" fill="#8A5A3C"/>
+    <text x="44" y="34" font-size="10" fill="#66776F" font-family="sans-serif" font-weight="700">z z</text>
+    <line x1="76" y1="47" x2="76" y2="53" stroke="#5B4A3F" stroke-width="1.2"/><ellipse cx="76" cy="59" rx="5" ry="6.5" fill="#B83A24"/><rect x="0" y="76" width="100" height="3" rx="1.5" fill="#BCCDC4"/></svg>`
+});
+
+
+/* ================= JAPANESE GUIDE: さくら Sakura (original artwork) ================= */
+function girl(mood='calm'){
+  const skin='#F7DCC6', hair='#2B2024', robe='#27427A', robeD='#1A2E57', cream='#F4F1EA';
+  let eyes, mouth, extra='';
+  if(mood==='happy'){
+    eyes=`<path d="M42 70 Q48 62 54 70 M66 70 Q72 62 78 70" stroke="${hair}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`;
+    mouth=`<path d="M52 80 Q60 92 68 80 Z" fill="#8A2B1A"/><path d="M55.5 85 Q60 89 64.5 85 Q60 83 55.5 85Z" fill="#E7756A"/>`;
+    extra=`<path d="M103 52 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z M13 44 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z" fill="#C9952B"/>`;
+  } else if(mood==='oops'){
+    eyes=`<ellipse cx="48" cy="70" rx="4.2" ry="5.2" fill="${hair}"/><ellipse cx="72" cy="70" rx="4.2" ry="5.2" fill="${hair}"/>
+      <circle cx="49.6" cy="68" r="1.6" fill="#fff"/><circle cx="73.6" cy="68" r="1.6" fill="#fff"/>
+      <path d="M41 61 L53 58 M79 61 L67 58" stroke="${hair}" stroke-width="2.6" stroke-linecap="round"/>`;
+    mouth=`<ellipse cx="60" cy="84" rx="3.6" ry="4.2" fill="#8A2B1A"/>`;
+    extra=`<path d="M100 56 Q105 65 100 69 Q95 65 100 56Z" fill="#8EC3DA"/>`;
+  } else {
+    eyes=`<ellipse cx="48" cy="70" rx="4.2" ry="5.2" fill="${hair}"/><ellipse cx="72" cy="70" rx="4.2" ry="5.2" fill="${hair}"/>
+      <circle cx="49.6" cy="68" r="1.6" fill="#fff"/><circle cx="73.6" cy="68" r="1.6" fill="#fff"/>
+      <path d="M42 60 Q47 57 53 59 M67 59 Q73 57 78 60" stroke="${hair}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    mouth=`<path d="M55 81 Q60 86 65 81" stroke="#8A2B1A" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  }
+  const petal=(cx,cy)=>[0,72,144,216,288].map(a=>{const r=a*Math.PI/180;return `<ellipse cx="${(cx+4*Math.sin(r)).toFixed(1)}" cy="${(cy-4*Math.cos(r)).toFixed(1)}" rx="3" ry="3.8" transform="rotate(${a} ${(cx+4*Math.sin(r)).toFixed(1)} ${(cy-4*Math.cos(r)).toFixed(1)})" fill="#F4A7B9"/>`;}).join('')+`<circle cx="${cx}" cy="${cy}" r="1.8" fill="#F2C14E"/>`;
+  return `<svg viewBox="0 0 120 160" aria-hidden="true">
+  <ellipse cx="60" cy="153" rx="30" ry="5" fill="#1A2E57" opacity=".15"/>
+  <rect x="40" y="145" width="17" height="5" rx="1.5" fill="#8A5A3C"/><rect x="63" y="145" width="17" height="5" rx="1.5" fill="#8A5A3C"/>
+  <path d="M40 94 Q60 88 80 94 L88 145 Q60 150 32 145 Z" fill="${robe}"/>
+  <g fill="#fff" opacity=".35"><circle cx="44" cy="128" r="2.4"/><circle cx="56" cy="136" r="2.4"/><circle cx="72" cy="126" r="2.4"/><circle cx="80" cy="139" r="2.4"/><circle cx="64" cy="141" r="2.4"/><circle cx="48" cy="141" r="2.4"/></g>
+  <path d="M50 91 L60 108 L70 91 Z" fill="${cream}"/>
+  <path d="M50 91 L64 112 L70 108 L56 91Z" fill="${robeD}"/>
+  <rect x="36" y="105" width="48" height="14" rx="2" fill="#B83A24"/><rect x="36" y="111" width="48" height="2.6" fill="#F2C14E"/>
+  <path d="M42 96 Q26 100 22 112 L22 136 Q30 140 39 135 L44 106Z" fill="${robe}"/>
+  <path d="M78 96 Q94 100 98 112 L98 136 Q90 140 81 135 L76 106Z" fill="${robe}"/>
+  <g fill="#fff" opacity=".35"><circle cx="28" cy="122" r="2.2"/><circle cx="92" cy="126" r="2.2"/></g>
+  <circle cx="40" cy="131" r="5.5" fill="${skin}"/><circle cx="80" cy="131" r="5.5" fill="${skin}"/>
+  <rect x="55" y="86" width="10" height="8" fill="${skin}"/>
+  <circle cx="86" cy="28" r="12" fill="${hair}"/>
+  <path d="M22 64 Q22 24 60 24 Q98 24 98 64 L98 92 Q92 97 85 91 L35 91 Q28 97 22 92 Z" fill="${hair}"/>
+  <ellipse cx="60" cy="66" rx="33" ry="31" fill="${skin}"/>
+  <path d="M26 62 C24 26 96 26 94 62 L94 50 L26 50 Z" fill="${hair}"/>
+  <path d="M40 34 Q52 30 62 33" stroke="#4A3B40" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
+  ${petal(90,40)}<path d="M93 44 L97 58" stroke="#C9952B" stroke-width="1.2"/><circle cx="97.5" cy="60" r="2" fill="#F4A7B9"/>
+  <ellipse cx="40" cy="79" rx="6" ry="3.5" fill="#F2A399" opacity=".75"/><ellipse cx="80" cy="79" rx="6" ry="3.5" fill="#F2A399" opacity=".75"/>
+  ${eyes}${mouth}${extra}</svg>`;
+}
+
+/* ================= JAPAN SCENERY ================= */
+Object.assign(SCENES,{
+  sakura:()=>{ const c=[[34,32,12,'#F4B6C6'],[50,24,14,'#F7CAD5'],[66,32,12,'#F4B6C6'],[26,46,9,'#F7CAD5'],[74,46,9,'#F7CAD5'],[42,42,11,'#F7CAD5'],[60,42,11,'#F4B6C6']];
+    return `<svg viewBox="0 0 100 80" aria-hidden="true"><ellipse cx="50" cy="77" rx="40" ry="3" fill="#1A2E57" opacity=".12"/>
+    <path d="M45 78 Q48 62 49 46 L53 46 Q54 62 57 78Z" fill="#6B4A3A"/><path d="M50 52 Q42 46 32 46 M52 50 Q60 44 70 44" stroke="#6B4A3A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${c.map(([x,y,r,f])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${f}"/>`).join('')}
+    <g fill="#F4A7B9"><ellipse cx="18" cy="64" rx="2" ry="1.3" transform="rotate(30 18 64)"/><ellipse cx="84" cy="62" rx="2" ry="1.3" transform="rotate(-20 84 62)"/><ellipse cx="72" cy="72" rx="2" ry="1.3"/><ellipse cx="28" cy="72" rx="2" ry="1.3" transform="rotate(50 28 72)"/></g></svg>`; },
+  torii:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="22" y="24" width="7" height="50" fill="#B83A24"/><rect x="71" y="24" width="7" height="50" fill="#B83A24"/>
+    <rect x="12" y="36" width="76" height="5" fill="#B83A24"/><rect x="12" y="18" width="76" height="6" fill="#B83A24"/><rect x="47" y="24" width="6" height="12" fill="#B83A24"/>
+    <path d="M3 17 Q11 19 15 11 L85 11 Q89 19 97 17 L92 10 Q88 6 84 6 L16 6 Q12 6 8 10Z" fill="#1E2629"/>
+    <rect x="20" y="72" width="11" height="5" rx="1" fill="#1E2629"/><rect x="69" y="72" width="11" height="5" rx="1" fill="#1E2629"/></svg>`,
+  fuji:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><circle cx="80" cy="18" r="9" fill="#D9573C"/>
+    <path d="M4 74 L42 22 Q50 16 58 22 L96 74Z" fill="#3B63A8"/>
+    <path d="M42 22 Q50 16 58 22 L67 35 L61 32 L56 38 L50 32 L44 38 L39 32 L33 35Z" fill="#fff"/>
+    <rect x="0" y="72" width="100" height="6" rx="2" fill="#9CC7DA"/><path d="M10 75 h14 M40 75 h18 M72 75 h12" stroke="#fff" stroke-width="1.5" opacity=".7"/>
+    <path d="M12 24 Q16 18 22 22 Q26 16 32 22 Q36 22 34 26 L14 26Z" fill="#fff" opacity=".9"/></svg>`,
+  castle:()=>{ const roof=(y,l,r)=>`<path d="M${l-8} ${y+4} Q${l-2} ${y+4} ${l+2} ${y-3} L${r-2} ${y-3} Q${r+2} ${y+4} ${r+8} ${y+4} L${r+4} ${y+7} L${l-4} ${y+7}Z" fill="#33403F"/>`;
+    return `<svg viewBox="0 0 120 100" aria-hidden="true"><path d="M14 96 L24 70 L96 70 L106 96Z" fill="#9AA3AE"/><path d="M20 84 H100 M26 77 H94 M40 70 V96 M60 70 V96 M80 70 V96" stroke="#7E8794" stroke-width="1"/>
+    <rect x="28" y="55" width="64" height="15" fill="#FBFBFD" stroke="#C6CEDD"/>${roof(50,28,92)}
+    <rect x="36" y="38" width="48" height="14" fill="#FBFBFD" stroke="#C6CEDD"/>${roof(33,36,84)}
+    <rect x="44" y="22" width="32" height="13" fill="#FBFBFD" stroke="#C6CEDD"/>${roof(17,44,76)}
+    <path d="M38 13 l4 -6 2 6Z M82 13 l-4 -6 -2 6Z" fill="#C9952B"/>
+    <g fill="#33403F"><rect x="40" y="60" width="6" height="5"/><rect x="57" y="60" width="6" height="5"/><rect x="74" y="60" width="6" height="5"/><rect x="48" y="42" width="5" height="5"/><rect x="67" y="42" width="5" height="5"/><rect x="57" y="25" width="6" height="5"/></g></svg>`; },
+  koi:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><ellipse cx="50" cy="48" rx="47" ry="27" fill="#9CC7DA"/><ellipse cx="50" cy="48" rx="47" ry="27" fill="none" stroke="#9AA3AE" stroke-width="4"/>
+    <g transform="rotate(-18 36 44)"><ellipse cx="36" cy="44" rx="13" ry="5.5" fill="#fff"/><path d="M23 44 L14 38 L16 44 L14 50Z" fill="#E8743B"/><ellipse cx="40" cy="43" rx="5" ry="3.5" fill="#E8743B"/><circle cx="46" cy="43" r="1" fill="#1E2629"/></g>
+    <g transform="rotate(160 66 54)"><ellipse cx="66" cy="54" rx="12" ry="5" fill="#E8743B"/><path d="M54 54 L46 49 L48 54 L46 59Z" fill="#E8743B"/><ellipse cx="64" cy="53" rx="4" ry="3" fill="#fff"/><circle cx="75" cy="53" r="1" fill="#1E2629"/></g>
+    <circle cx="78" cy="36" r="7" fill="#5FA383"/><path d="M78 36 L85 33" stroke="#9CC7DA" stroke-width="2"/><circle cx="22" cy="60" r="5" fill="#5FA383"/></svg>`,
+  train:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><path d="M0 72 H100" stroke="#5B4A3F" stroke-width="2"/><path d="M6 75 h4 M22 75 h4 M38 75 h4 M54 75 h4 M70 75 h4 M86 75 h4" stroke="#8A5A3C" stroke-width="2"/>
+    <path d="M2 46 L58 46 Q86 46 98 64 L98 68 L2 68Z" fill="#FBFBFD" stroke="#C6CEDD"/>
+    <path d="M2 58 L80 58 Q90 58 96 62 L98 64 L2 64Z" fill="#3B63A8"/>
+    <g fill="#33403F"><rect x="8" y="50" width="8" height="5" rx="1"/><rect x="20" y="50" width="8" height="5" rx="1"/><rect x="32" y="50" width="8" height="5" rx="1"/><rect x="44" y="50" width="8" height="5" rx="1"/><path d="M62 49 L74 49 Q82 50 86 55 L62 55Z"/></g>
+    <path d="M20 30 Q30 22 40 30 M60 22 Q66 16 72 22" stroke="#C6CEDD" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  scroll:()=>`<svg viewBox="0 0 100 80" aria-hidden="true"><rect x="16" y="17" width="62" height="50" fill="#F5EBD3" stroke="#D8C9A3"/>
+    <rect x="10" y="12" width="74" height="7" rx="3.5" fill="#8A5A3C"/><rect x="10" y="65" width="74" height="7" rx="3.5" fill="#8A5A3C"/>
+    <text x="47" y="38" font-size="13" text-anchor="middle" fill="#1E2629" font-family="serif">学 校</text>
+    <text x="47" y="57" font-size="13" text-anchor="middle" fill="#1E2629" font-family="serif">試 験</text>
+    <rect x="66" y="52" width="8" height="8" fill="#B83A24"/>
+    <path d="M86 16 L95 60" stroke="#8A5A3C" stroke-width="3" stroke-linecap="round"/><path d="M93 58 L98 72 L91 61Z" fill="#1E2629"/></svg>`
+});
+
+/* ================= HELPERS ================= */
+const app=document.getElementById('app');
+const KEY='nihongo-road:progress';
+let state={stars:{},xp:0,miss:{},lang:'id',region:'hira'};
+let quiz=null, cur={ri:0,si:0,k:0};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const bigSize=s=>{const n=[...s].length;return n<=1?120:n===2?92:n===3?70:n===4?56:n<=6?42:32;};
+const SPK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+async function load(){ try{ let v=null;
+  if(window.storage){ const r=await window.storage.get(KEY,false); v=r&&r.value; }
+  else if(window.localStorage){ v=localStorage.getItem(KEY); }
+  if(v) state=Object.assign({stars:{},xp:0,miss:{},lang:'id',region:'hira'},JSON.parse(v)); }catch(e){} }
+async function save(){ try{ const v=JSON.stringify(state);
+  if(window.storage) await window.storage.set(KEY,v,false);
+  else if(window.localStorage) localStorage.setItem(KEY,v); }catch(e){} }
+
+/* speech: Japanese voice */
+const canSpeak='speechSynthesis' in window;
+let jaVoice=null, voiceOK=false;
+function pickVoice(){ if(!canSpeak) return; const vs=speechSynthesis.getVoices(); jaVoice=vs.find(v=>/ja[-_]JP/i.test(v.lang))||vs.find(v=>/^ja/i.test(v.lang))||null; voiceOK=!!jaVoice; }
+if(canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+let lastUtter=null, sayTimer=null, speechPrimed=false;
+function primeSpeech(){ if(speechPrimed||!canSpeak) return; speechPrimed=true;
+  try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){} }
+function say(t,slow){
+  if(!canSpeak||!t) return;
+  try{ speechSynthesis.cancel(); clearTimeout(sayTimer);
+    const n=[...t.replace(/[^぀-ヿ一-鿿]/g,'')].length;
+    let rate=n<=2?.6:n<=4?.7:.8; if(slow) rate*=.7;
+    sayTimer=setTimeout(()=>{ const u=new SpeechSynthesisUtterance(t+'。'); u.lang='ja-JP'; if(jaVoice) u.voice=jaVoice;
+      u.rate=rate; lastUtter=u; speechSynthesis.speak(u); },180);
+  }catch(e){}
+}
+let actx;
+function beep(ok){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const t0=actx.currentTime;
+  (ok?[660,990]:[300,220]).forEach((f,i)=>{ const o=actx.createOscillator(),g=actx.createGain(); o.type='triangle'; o.frequency.value=f;
+    const s=t0+i*.1; g.gain.setValueAtTime(.0001,s); g.gain.exponentialRampToValueAtTime(.15,s+.02); g.gain.exponentialRampToValueAtTime(.0001,s+.2);
+    o.connect(g).connect(actx.destination); o.start(s); o.stop(s+.22); }); }catch(e){} }
+
+/* ================= DATA: KANA ================= */
+const toKata=s=>s.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60));
+const toHira=s=>s.replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+const KANA_ALT={shi:['si'],chi:['ti'],tsu:['tu'],fu:['hu'],ji:['zi','di'],zu:['du'],wo:['o'],n:['nn'],sha:['sya'],shu:['syu'],sho:['syo'],
+  cha:['tya','cya'],chu:['tyu','cyu'],cho:['tyo','cyo'],ja:['zya','jya'],ju:['zyu','jyu'],jo:['zyo','jyo']};
+const KG=[
+ ['あいうえおかきくけこさしすせそ','a i u e o ka ki ku ke ko sa shi su se so'],
+ ['たちつてとなにぬねのはひふへほ','ta chi tsu te to na ni nu ne no ha hi fu he ho'],
+ ['まみむめもやゆよらりるれろわをん','ma mi mu me mo ya yu yo ra ri ru re ro wa wo n'],
+ ['がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ','ga gi gu ge go za ji zu ze zo da ji zu de do ba bi bu be bo pa pi pu pe po'],
+ ['きゃ きゅ きょ しゃ しゅ しょ ちゃ ちゅ ちょ にゃ にゅ にょ ひゃ ひゅ ひょ みゃ みゅ みょ りゃ りゅ りょ ぎゃ ぎゅ ぎょ じゃ じゅ じょ びゃ びゅ びょ ぴゃ ぴゅ ぴょ',
+  'kya kyu kyo sha shu sho cha chu cho nya nyu nyo hya hyu hyo mya myu myo rya ryu ryo gya gyu gyo ja ju jo bya byu byo pya pyu pyo']];
+const NOTES={'し':'Read shi, not si.','ち':'Read chi, not ti.','つ':'Read tsu, not tu.','ふ':'Read fu, a soft sound between f and h.',
+  'を':'Only used as a particle (marks the object). Sounds like お.','は':'As a particle, は is read wa: こんにちは.','へ':'As a particle, へ is read e.',
+  'ん':'The only kana that is just a consonant.','ぢ':'Rare. Sounds the same as じ (ji).','づ':'Rare. Sounds the same as ず (zu).'};
+const ROM={};
+function kanaSet(script){
+  return KG.map(([hs,rs])=>{ const H=hs.includes(' ')?hs.split(' '):[...hs], R=rs.split(' ');
+    return H.map((h,i)=>{ ROM[h]=R[i]; let note=NOTES[h]||'';
+      if(script==='kata'){ note=['は','へ','を'].includes(h)?'':note.replace(/[ぁ-ゖ]/g,c=>toKata(c)); }
+      return {type:'kana',id:script+':'+h,k:script==='kata'?toKata(h):h,hira:h,kata:toKata(h),r:R[i],alt:KANA_ALT[R[i]]||[],say:h,note}; }); });
+}
+const HIRA=kanaSet('hira'), KATA=kanaSet('kata');
+
+function kanaToRomaji(s){ s=toHira(s); let out='',i=0;
+  while(i<s.length){ const two=s.slice(i,i+2), c=s[i];
+    if(ROM[two]&&two.length===2){ out+=ROM[two]; i+=2; continue; }
+    if(c==='っ'){ const nx=ROM[s.slice(i+1,i+3)]||ROM[s[i+1]]||''; out+=nx.startsWith('ch')?'t':(nx[0]||''); i++; continue; }
+    if(c==='ー'){ out+=out.slice(-1); i++; continue; }
+    if(ROM[c]) out+=ROM[c]; i++; }
+  return out; }
+function loose(s){
+  s=String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z]/g,'');
+  s=s.replace(/shi/g,'si').replace(/chi/g,'ti').replace(/tsu/g,'tu').replace(/fu/g,'hu').replace(/ji/g,'zi').replace(/di/g,'zi').replace(/du/g,'zu')
+     .replace(/sh/g,'sy').replace(/ch/g,'ty').replace(/j/g,'zy');
+  return s.replace(/ou/g,'o').replace(/([aiueo])\1+/g,'$1').replace(/nn/g,'n');
+}
+
+/* katakana words */
+const KWORDS=`コーヒー|coffee|kopi
+テレビ|TV|televisi
+パン|bread|roti
+カメラ|camera|kamera
+ノート|notebook|buku catatan
+ホテル|hotel|hotel
+バス|bus|bus
+タクシー|taxi|taksi
+アイスクリーム|ice cream|es krim
+ケーキ|cake|kue
+ジュース|juice|jus
+インドネシア|Indonesia|Indonesia
+ピアノ|piano|piano
+ゲーム|game|permainan (game)`.split('\n').map(l=>{ const [k,en,mid]=l.split('|'); return {type:'word',id:'w:'+k,k,en,mid,r:kanaToRomaji(k),say:k}; });
+
+/* ================= DATA: KANJI =================
+   kanji | on-yomi | kun-yomi | meaning EN | arti ID | example word | reading | word EN | word ID */
+const N5RAW=`一|イチ・イツ|ひと(つ)|one|satu|一つ|ひとつ|one (thing)|satu (buah)
+二|ニ|ふた(つ)|two|dua|二つ|ふたつ|two (things)|dua (buah)
+三|サン|み・みっ(つ)|three|tiga|三つ|みっつ|three (things)|tiga (buah)
+四|シ|よ・よん・よっ(つ)|four|empat|四つ|よっつ|four (things)|empat (buah)
+五|ゴ|いつ(つ)|five|lima|五つ|いつつ|five (things)|lima (buah)
+六|ロク|む・むっ(つ)|six|enam|六つ|むっつ|six (things)|enam (buah)
+七|シチ|なな(つ)|seven|tujuh|七つ|ななつ|seven (things)|tujuh (buah)
+八|ハチ|や・やっ(つ)|eight|delapan|八つ|やっつ|eight (things)|delapan (buah)
+九|キュウ・ク|ここの(つ)|nine|sembilan|九つ|ここのつ|nine (things)|sembilan (buah)
+十|ジュウ|とお|ten|sepuluh|十日|とおか|the 10th (day)|tanggal 10
+百|ヒャク|—|hundred|ratus|三百|さんびゃく|three hundred|tiga ratus
+千|セン|ち|thousand|ribu|三千|さんぜん|three thousand|tiga ribu
+万|マン|—|ten thousand|sepuluh ribu|一万円|いちまんえん|10,000 yen|10.000 yen
+円|エン|まる(い)|yen, circle|yen, lingkaran|百円|ひゃくえん|100 yen|100 yen
+日|ニチ・ジツ|ひ・か|sun, day|matahari, hari|日曜日|にちようび|Sunday|hari Minggu
+月|ゲツ・ガツ|つき|moon, month|bulan|月曜日|げつようび|Monday|hari Senin
+火|カ|ひ|fire|api|火曜日|かようび|Tuesday|hari Selasa
+水|スイ|みず|water|air|水曜日|すいようび|Wednesday|hari Rabu
+木|モク・ボク|き|tree, wood|pohon, kayu|木曜日|もくようび|Thursday|hari Kamis
+金|キン|かね|gold, money|emas, uang|金曜日|きんようび|Friday|hari Jumat
+土|ド|つち|soil, earth|tanah|土曜日|どようび|Saturday|hari Sabtu
+年|ネン|とし|year|tahun|今年|ことし|this year|tahun ini
+時|ジ|とき|time, o'clock|waktu, jam|何時|なんじ|what time|jam berapa
+分|フン・ブン|わ(かる)|minute, part|menit, bagian|五分|ごふん|five minutes|lima menit
+半|ハン|なか(ば)|half|setengah|三時半|さんじはん|half past three|pukul setengah empat
+間|カン|あいだ|interval, between|jarak, antara|時間|じかん|time, hours|waktu, jam
+週|シュウ|—|week|minggu (pekan)|今週|こんしゅう|this week|minggu ini
+毎|マイ|—|every|setiap|毎日|まいにち|every day|setiap hari
+今|コン|いま|now|sekarang|今日|きょう|today|hari ini
+午|ゴ|—|noon|tengah hari|午前|ごぜん|a.m., morning|pagi (sebelum pukul 12)
+前|ゼン|まえ|before, front|sebelum, depan|名前|なまえ|name|nama
+後|ゴ・コウ|うし(ろ)・あと|after, behind|sesudah, belakang|午後|ごご|p.m., afternoon|siang/sore (setelah pukul 12)
+何|カ|なに・なん|what|apa|何人|なんにん|how many people|berapa orang
+人|ジン・ニン|ひと|person|orang|日本人|にほんじん|Japanese person|orang Jepang
+男|ダン・ナン|おとこ|man|laki-laki|男の子|おとこのこ|boy|anak laki-laki
+女|ジョ|おんな|woman|perempuan|女の子|おんなのこ|girl|anak perempuan
+子|シ|こ|child|anak|子ども|こども|child, children|anak-anak
+父|フ|ちち|father|ayah|お父さん|おとうさん|(someone's) father|ayah, bapak
+母|ボ|はは|mother|ibu|お母さん|おかあさん|(someone's) mother|ibu
+友|ユウ|とも|friend|teman|友だち|ともだち|friend|teman
+先|セン|さき|ahead, previous|lebih dulu, depan|先週|せんしゅう|last week|minggu lalu
+生|セイ|い(きる)・う(まれる)|life, birth|hidup, lahir|先生|せんせい|teacher|guru
+学|ガク|まな(ぶ)|study, learning|belajar, ilmu|学生|がくせい|student|pelajar
+名|メイ|な|name|nama|有名|ゆうめい|famous|terkenal
+口|コウ|くち|mouth|mulut|人口|じんこう|population|jumlah penduduk
+目|モク|め|eye|mata|目薬|めぐすり|eye drops|obat tetes mata
+耳|ジ|みみ|ear|telinga|耳|みみ|ear|telinga
+手|シュ|て|hand|tangan|上手|じょうず|good at, skilled|pandai, mahir
+足|ソク|あし・た(りる)|foot, leg; enough|kaki; cukup|足りる|たりる|to be enough|cukup
+山|サン|やま|mountain|gunung|富士山|ふじさん|Mount Fuji|Gunung Fuji
+川|セン|かわ|river|sungai|小川|おがわ|stream|sungai kecil
+天|テン|あめ|heaven|surga, langit|天気|てんき|weather|cuaca
+気|キ|—|spirit, air|semangat, udara|元気|げんき|healthy, cheerful|sehat, semangat
+雨|ウ|あめ|rain|hujan|大雨|おおあめ|heavy rain|hujan deras
+花|カ|はな|flower|bunga|花火|はなび|fireworks|kembang api
+空|クウ|そら|sky, empty|angkasa, kosong|空港|くうこう|airport|bandara
+田|デン|た|rice field|sawah|田中|たなか|Tanaka (a surname)|Tanaka (nama keluarga)
+電|デン|—|electricity|listrik|電車|でんしゃ|train|kereta listrik
+上|ジョウ|うえ|up, above|atas|上着|うわぎ|jacket|jaket
+下|カ・ゲ|した|down, below|bawah|地下鉄|ちかてつ|subway|kereta bawah tanah
+中|チュウ|なか|middle, inside|tengah, dalam|中国|ちゅうごく|China|Tiongkok
+外|ガイ|そと|outside|luar|外国|がいこく|foreign country|luar negeri
+右|ウ|みぎ|right|kanan|右手|みぎて|right hand|tangan kanan
+左|サ|ひだり|left|kiri|左手|ひだりて|left hand|tangan kiri
+東|トウ|ひがし|east|timur|東京|とうきょう|Tokyo|Tokyo
+西|セイ|にし|west|barat|西口|にしぐち|west exit|pintu barat
+南|ナン|みなみ|south|selatan|南口|みなみぐち|south exit|pintu selatan
+北|ホク|きた|north|utara|北口|きたぐち|north exit|pintu utara
+見|ケン|み(る)|see|melihat|見る|みる|to see|melihat
+行|コウ|い(く)|go|pergi|行く|いく|to go|pergi
+来|ライ|く(る)|come|datang|来週|らいしゅう|next week|minggu depan
+食|ショク|た(べる)|eat|makan|食べる|たべる|to eat|makan
+飲|イン|の(む)|drink|minum|飲み物|のみもの|a drink|minuman
+言|ゲン|い(う)|say|berkata|言う|いう|to say|berkata
+話|ワ|はな(す)|talk|berbicara|電話|でんわ|telephone|telepon
+読|ドク|よ(む)|read|membaca|読む|よむ|to read|membaca
+書|ショ|か(く)|write|menulis|書く|かく|to write|menulis
+聞|ブン|き(く)|hear, ask|mendengar, bertanya|新聞|しんぶん|newspaper|koran
+買|バイ|か(う)|buy|membeli|買い物|かいもの|shopping|belanja
+休|キュウ|やす(む)|rest|beristirahat|休み|やすみ|holiday, break|libur
+出|シュツ|で(る)・だ(す)|go out|keluar|出口|でぐち|exit|pintu keluar
+入|ニュウ|はい(る)・い(れる)|enter|masuk|入口|いりぐち|entrance|pintu masuk
+立|リツ|た(つ)|stand|berdiri|立つ|たつ|to stand|berdiri
+会|カイ|あ(う)|meet|bertemu|会社|かいしゃ|company|perusahaan
+大|ダイ|おお(きい)|big|besar|大学|だいがく|university|universitas
+小|ショウ|ちい(さい)|small|kecil|小さい|ちいさい|small|kecil
+高|コウ|たか(い)|tall, expensive|tinggi, mahal|高校|こうこう|high school|SMA
+安|アン|やす(い)|cheap, safe|murah, aman|安い|やすい|cheap|murah
+新|シン|あたら(しい)|new|baru|新しい|あたらしい|new|baru
+古|コ|ふる(い)|old|lama, tua|古い|ふるい|old (things)|lama, kuno
+長|チョウ|なが(い)|long|panjang|長い|ながい|long|panjang
+白|ハク|しろ|white|putih|白い|しろい|white|putih
+多|タ|おお(い)|many|banyak|多い|おおい|many, a lot|banyak
+少|ショウ|すく(ない)・すこ(し)|few, a little|sedikit|少し|すこし|a little|sedikit
+本|ホン|もと|book, origin|buku, asal|日本|にほん|Japan|Jepang
+車|シャ|くるま|car, vehicle|mobil, kendaraan|自転車|じてんしゃ|bicycle|sepeda
+校|コウ|—|school|sekolah|学校|がっこう|school|sekolah
+店|テン|みせ|shop|toko|店員|てんいん|shop clerk|pelayan toko
+駅|エキ|—|station|stasiun|駅前|えきまえ|in front of the station|depan stasiun
+道|ドウ|みち|road, way|jalan|北海道|ほっかいどう|Hokkaido|Hokkaido
+社|シャ|やしろ|company, shrine|perusahaan, kuil|神社|じんじゃ|Shinto shrine|kuil Shinto
+国|コク|くに|country|negara|国語|こくご|national language|bahasa nasional
+語|ゴ|かた(る)|language, word|bahasa, kata|日本語|にほんご|Japanese (language)|bahasa Jepang`;
+
+const N4RAW=`兄|キョウ|あに|older brother|kakak laki-laki|お兄さん|おにいさん|(someone's) older brother|kakak laki-laki (orang lain)
+弟|ダイ・テイ|おとうと|younger brother|adik laki-laki|兄弟|きょうだい|siblings|saudara kandung
+姉|シ|あね|older sister|kakak perempuan|お姉さん|おねえさん|(someone's) older sister|kakak perempuan (orang lain)
+妹|マイ|いもうと|younger sister|adik perempuan|姉妹|しまい|sisters|saudara perempuan
+家|カ|いえ・うち|house, home|rumah|家族|かぞく|family|keluarga
+族|ゾク|—|tribe, family group|suku, kelompok keluarga|民族|みんぞく|ethnic group|suku bangsa
+親|シン|おや|parent|orang tua|両親|りょうしん|both parents|kedua orang tua
+私|シ|わたし|I, private|saya, pribadi|私立|しりつ|private (school)|swasta
+自|ジ|みずか(ら)|self|diri sendiri|自分|じぶん|oneself|dirinya sendiri
+医|イ|—|medicine|kedokteran|医者|いしゃ|doctor|dokter
+者|シャ|もの|person (who does)|orang (pelaku)|学者|がくしゃ|scholar|ilmuwan
+員|イン|—|member|anggota|会社員|かいしゃいん|company employee|karyawan
+主|シュ|おも|main, master|utama, tuan|主人|しゅじん|husband|suami
+春|シュン|はる|spring|musim semi|春休み|はるやすみ|spring break|libur musim semi
+夏|カ|なつ|summer|musim panas|夏休み|なつやすみ|summer vacation|libur musim panas
+秋|シュウ|あき|autumn|musim gugur|春夏秋冬|しゅんかしゅうとう|the four seasons|empat musim
+冬|トウ|ふゆ|winter|musim dingin|冬休み|ふゆやすみ|winter vacation|libur musim dingin
+朝|チョウ|あさ|morning|pagi|朝ご飯|あさごはん|breakfast|sarapan
+昼|チュウ|ひる|daytime, noon|siang|昼ご飯|ひるごはん|lunch|makan siang
+夕|セキ|ゆう|evening|sore|夕方|ゆうがた|early evening|sore hari
+夜|ヤ|よる|night|malam|今夜|こんや|tonight|malam ini
+曜|ヨウ|—|day of the week|hari (dalam pekan)|曜日|ようび|day of the week|nama hari
+早|ソウ|はや(い)|early, fast|awal, cepat|早い|はやい|early|pagi-pagi, awal
+暑|ショ|あつ(い)|hot (weather)|panas (cuaca)|暑い|あつい|hot (weather)|panas
+寒|カン|さむ(い)|cold (weather)|dingin (cuaca)|寒い|さむい|cold (weather)|dingin
+明|メイ|あか(るい)|bright|terang|明日|あした|tomorrow|besok
+暗|アン|くら(い)|dark|gelap|暗い|くらい|dark|gelap
+重|ジュウ|おも(い)|heavy|berat|重い|おもい|heavy|berat
+軽|ケイ|かる(い)|light (weight)|ringan|軽い|かるい|light|ringan
+強|キョウ|つよ(い)|strong|kuat|強い|つよい|strong|kuat
+弱|ジャク|よわ(い)|weak|lemah|弱い|よわい|weak|lemah
+悪|アク|わる(い)|bad|buruk, jahat|悪い|わるい|bad|buruk
+広|コウ|ひろ(い)|wide|luas|広い|ひろい|wide, spacious|luas
+近|キン|ちか(い)|near|dekat|近い|ちかい|near|dekat
+遠|エン|とお(い)|far|jauh|遠い|とおい|far|jauh
+赤|セキ|あか|red|merah|赤ちゃん|あかちゃん|baby|bayi
+青|セイ|あお|blue|biru|青い|あおい|blue|biru
+黒|コク|くろ|black|hitam|黒い|くろい|black|hitam
+色|ショク|いろ|colour|warna|色々|いろいろ|various|bermacam-macam
+歩|ホ|ある(く)|walk|berjalan|歩く|あるく|to walk|berjalan kaki
+走|ソウ|はし(る)|run|berlari|走る|はしる|to run|berlari
+起|キ|お(きる)|get up|bangun|起きる|おきる|to wake up|bangun tidur
+寝|シン|ね(る)|sleep|tidur|寝る|ねる|to go to bed|tidur
+使|シ|つか(う)|use|menggunakan|使う|つかう|to use|memakai
+作|サク|つく(る)|make|membuat|作る|つくる|to make|membuat
+持|ジ|も(つ)|hold, have|memegang, membawa|持つ|もつ|to hold|memegang
+待|タイ|ま(つ)|wait|menunggu|待つ|まつ|to wait|menunggu
+教|キョウ|おし(える)|teach|mengajar|教室|きょうしつ|classroom|ruang kelas
+習|シュウ|なら(う)|learn|belajar (dari guru)|習う|ならう|to take lessons|les, belajar
+知|チ|し(る)|know|tahu|知る|しる|to know|mengetahui
+思|シ|おも(う)|think|berpikir|思う|おもう|to think|berpikir
+開|カイ|あ(ける)|open|membuka|開ける|あける|to open|membuka
+閉|ヘイ|し(める)|close|menutup|閉める|しめる|to close|menutup
+始|シ|はじ(める)|begin|memulai|始める|はじめる|to begin|memulai
+終|シュウ|お(わる)|end|selesai|終わる|おわる|to end|berakhir
+送|ソウ|おく(る)|send|mengirim|送る|おくる|to send|mengirim
+借|シャク|か(りる)|borrow|meminjam|借りる|かりる|to borrow|meminjam
+貸|タイ|か(す)|lend|meminjamkan|貸す|かす|to lend|meminjamkan
+答|トウ|こた(える)|answer|menjawab|答え|こたえ|an answer|jawaban
+乗|ジョウ|の(る)|ride|naik|乗る|のる|to ride, get on|naik (kendaraan)
+着|チャク|き(る)・つ(く)|wear, arrive|memakai (baju), tiba|着物|きもの|kimono|kimono
+町|チョウ|まち|town|kota kecil|下町|したまち|old downtown|kota lama
+村|ソン|むら|village|desa|村人|むらびと|villager|penduduk desa
+県|ケン|—|prefecture|prefektur|県立|けんりつ|prefectural|milik prefektur
+病|ビョウ|やまい|illness|penyakit|病気|びょうき|sickness|sakit
+院|イン|—|institution|lembaga, gedung|病院|びょういん|hospital|rumah sakit
+館|カン|—|large building, hall|gedung besar|図書館|としょかん|library|perpustakaan
+図|ズ|はか(る)|map, drawing|peta, gambar|地図|ちず|map|peta
+室|シツ|—|room|ruangan|和室|わしつ|Japanese-style room|kamar gaya Jepang
+屋|オク|や|shop, roof|toko, atap|本屋|ほんや|bookshop|toko buku
+堂|ドウ|—|hall|aula|食堂|しょくどう|cafeteria|kantin
+地|チ・ジ|—|ground, land|daratan, bumi|地下|ちか|underground|bawah tanah
+動|ドウ|うご(く)|move|bergerak|自動車|じどうしゃ|car|mobil
+転|テン|ころ(ぶ)|turn, roll|berputar, terguling|運転|うんてん|driving|menyetir
+運|ウン|はこ(ぶ)|carry, luck|mengangkut, keberuntungan|運動|うんどう|exercise|olahraga
+旅|リョ|たび|travel|bepergian|旅行|りょこう|trip|perjalanan wisata
+肉|ニク|—|meat|daging|牛肉|ぎゅうにく|beef|daging sapi
+牛|ギュウ|うし|cow|sapi|牛乳|ぎゅうにゅう|milk|susu sapi
+魚|ギョ|さかな|fish|ikan|金魚|きんぎょ|goldfish|ikan mas koki
+鳥|チョウ|とり|bird|burung|焼き鳥|やきとり|grilled chicken skewers|sate ayam Jepang
+犬|ケン|いぬ|dog|anjing|子犬|こいぬ|puppy|anak anjing
+茶|チャ|—|tea|teh|お茶|おちゃ|green tea|teh hijau
+飯|ハン|めし|meal, cooked rice|nasi, makanan|ご飯|ごはん|rice, meal|nasi, makan
+料|リョウ|—|fee, ingredients|biaya, bahan|料金|りょうきん|fee, charge|tarif
+理|リ|—|reason, logic|alasan, logika|料理|りょうり|cooking|masakan
+紙|シ|かみ|paper|kertas|手紙|てがみ|letter|surat
+服|フク|—|clothes|pakaian|洋服|ようふく|Western clothes|baju (gaya Barat)
+映|エイ|うつ(る)|reflect, project|memantulkan|映画|えいが|movie|film
+画|ガ・カク|—|picture|gambar|画家|がか|painter|pelukis
+写|シャ|うつ(す)|copy, photograph|menyalin, memotret|写真|しゃしん|photo|foto
+真|シン|ま|true, real|benar, asli|真ん中|まんなか|right in the middle|tepat di tengah
+音|オン|おと|sound|suara, bunyi|音楽|おんがく|music|musik
+楽|ガク・ラク|たの(しい)|fun, music|senang, musik|楽しい|たのしい|fun|menyenangkan
+歌|カ|うた|song|lagu|歌手|かしゅ|singer|penyanyi
+文|ブン|ふみ|sentence, writing|kalimat, tulisan|作文|さくぶん|essay|karangan
+字|ジ|あざ|character, letter|huruf|漢字|かんじ|kanji|kanji (huruf Tionghoa)
+英|エイ|—|English, excellent|Inggris, unggul|英語|えいご|English (language)|bahasa Inggris
+質|シツ|—|quality|kualitas|質問|しつもん|question|pertanyaan
+問|モン|と(う)|ask, problem|bertanya, soal|問題|もんだい|problem, test question|soal, masalah
+題|ダイ|—|topic, title|judul, topik|宿題|しゅくだい|homework|PR
+試|シ|ため(す)|try|mencoba|試験|しけん|exam|ujian
+験|ケン|—|test, verify|menguji|経験|けいけん|experience|pengalaman
+勉|ベン|—|effort|usaha, rajin|勉強|べんきょう|study|belajar`;
+
+function kanjiSet(raw,lv){ return raw.trim().split('\n').map(l=>{ const [k,on,kun,en,mid,w,wr,wen,wid]=l.split('|');
+  return {type:'kanji',lv,id:lv+':'+k,k,on,kun,en,mid,w,wr,wen,wid,r:kanaToRomaji(wr),say:wr}; }); }
+const N5=kanjiSet(N5RAW,'N5'), N4=kanjiSet(N4RAW,'N4');
+const pick=(set,str)=>[...str].map(c=>{ const x=set.find(i=>i.k===c); if(!x) throw new Error('missing '+c); return x; });
+
+/* ================= REGIONS & STOPS ================= */
+const REGIONS=[
+{ id:'hira', jp:'ひらがな', name:'Hiragana', glyph:'あ',
+  intro:'Hiragana is the first Japanese alphabet. Every symbol is one sound, learned in rows: a-i-u-e-o, then ka-ki-ku-ke-ko, and so on.',
+  stops:[
+  {id:'h1',glyph:'あ',scene:'sakura',name:'Sakura Path',topic:'あ to そ · vowels, k, s',items:HIRA[0],
+   intro:'The five vowels あいうえお are the base of everything. The か and さ rows add k and s in front. Watch out: し is shi, not si.'},
+  {id:'h2',glyph:'た',scene:'torii',name:'Torii Gate',topic:'た to ほ · t, n, h',items:HIRA[1],
+   intro:'Two surprises in the た row: ち is chi and つ is tsu. In the は row, ふ is fu. Careful with look-alikes ぬ / め and ね / れ.'},
+  {id:'h3',glyph:'ま',scene:'bamboo',name:'Bamboo Grove',topic:'ま to ん · m, y, r, w, n',items:HIRA[2],
+   intro:'The ま, や, ら and わ rows, plus ん. を sounds like お and is only used as a particle. ん is the only kana that is just a consonant.'},
+  {id:'h4',glyph:'が',scene:'river',name:'Tenten River',topic:'が ざ だ ば ぱ · voiced sounds',items:HIRA[3],
+   intro:'Two small marks change the sound. Tenten ゛ makes it voiced: か→が, さ→ざ, た→だ, は→ば. Maru ゜ turns は into ぱ. ぢ and づ are rare and sound like じ and ず.'},
+  {id:'h5',glyph:'ゃ',scene:'koi',name:'Koi Pond',topic:'きゃ しゅ ちょ… · combined sounds',items:HIRA[4],
+   intro:'A small ゃ, ゅ or ょ joins the kana before it into one sound: き + ゃ = きゃ (kya). Look at the size: きや is ki-ya, きゃ is kya.'},
+  {id:'hB',glyph:'城',scene:'castle',name:'Hiragana Castle',topic:'Final test: all hiragana',boss:true,items:[],
+   intro:'Fifteen mixed questions from every hiragana stop.'}]},
+{ id:'kata', jp:'カタカナ', name:'Katakana', glyph:'ア',
+  intro:'Katakana has the same sounds as hiragana, written with sharper strokes. It is used for foreign words and names, like インドネシア.',
+  stops:[
+  {id:'k1',glyph:'ア',scene:'fuji',name:'Fuji View',topic:'ア to ソ · vowels, k, s',items:KATA[0],
+   intro:'Every hiragana has a katakana twin with the same sound: あ = ア, か = カ. Some twins look alike (か/カ, き/キ, せ/セ), which helps.'},
+  {id:'k2',glyph:'タ',scene:'village',name:'Village Lane',topic:'タ to ホ · t, n, h',items:KATA[1],
+   intro:'Famous look-alikes: シ (shi) and ツ (tsu). In シ the long stroke sweeps up from the bottom-left; in ツ it comes down from the top.'},
+  {id:'k3',glyph:'マ',scene:'train',name:'Bullet Train',topic:'マ to ン · m, y, r, w, n',items:KATA[2],
+   intro:'Another pair: ソ (so) and ン (n). ン is written like シ, from the bottom up; ソ like ツ, from the top down.'},
+  {id:'k4',glyph:'ガ',scene:'bridge',name:'Tenten Bridge',topic:'ガ ザ ダ バ パ · voiced sounds',items:KATA[3],
+   intro:'Tenten ゛ and maru ゜ work exactly like in hiragana: カ→ガ, ハ→バ, ハ→パ.'},
+  {id:'k5',glyph:'ャ',scene:'teahouse',name:'Tea House',topic:'キャ シュ チョ… · combined sounds',items:KATA[4],
+   intro:'Small ャ, ュ, ョ join the kana before them, just like hiragana: キ + ャ = キャ (kya).'},
+  {id:'k6',glyph:'ー',scene:'city',name:'Tokyo Streets',topic:'Real katakana words',items:KWORDS,
+   intro:'Now read real words. The long dash ー stretches the vowel before it: コーヒー is koohii (kōhī), coffee.'},
+  {id:'kB',glyph:'龍',scene:'dragon',name:'Dragon Gate',topic:'Final test: all katakana',boss:true,items:[],
+   intro:'Fifteen mixed questions from every katakana stop.'}]},
+{ id:'n5', jp:'N5 漢字', name:'Kanji N5', glyph:'日',
+  intro:'Kanji carry meaning. Each one has on-yomi readings (from Chinese, written in katakana) and kun-yomi readings (Japanese, written in hiragana). Learn each kanji with an example word.',
+  stops:[
+  {id:'n5a',glyph:'一',scene:'market',name:'Number Market',topic:'Numbers and money',items:pick(N5,'一二三四五六七八九十百千万円'),
+   intro:'Numbers are a great first step. Notice 四 is usually read よん and 七 often なな. Counting things uses the つ ending: 一つ, 二つ, 三つ.'},
+  {id:'n5b',glyph:'日',scene:'pagoda',name:'Calendar Pagoda',topic:'Days of the week',items:pick(N5,'日月火水木金土年'),
+   intro:'The days are named after the sun, moon and five elements: 日 sun, 月 moon, 火 fire, 水 water, 木 wood, 金 metal, 土 earth. Add 曜日 (yōbi) to make the day.'},
+  {id:'n5c',glyph:'時',scene:'night',name:'Clock House',topic:'Time words',items:pick(N5,'時分半間週毎今午前後何'),
+   intro:'Telling time: 時 is o\'clock, 分 is minutes, 半 is half past. 午前 is a.m. and 午後 is p.m.'},
+  {id:'n5d',glyph:'人',scene:'village',name:'Family Village',topic:'People and the body',items:pick(N5,'人男女子父母友先生学名口目耳手足'),
+   intro:'People and body parts. Some kanji are pictures: 口 is an open mouth, 目 an eye. 男 (man) is 田 rice field above 力 strength.'},
+  {id:'n5e',glyph:'山',scene:'fuji',name:'Fuji Fields',topic:'Nature and weather',items:pick(N5,'山川天気雨花空田電'),
+   intro:'Many kanji started as pictures: 山 looks like mountains, 川 like a flowing river, 雨 like raindrops under the sky.'},
+  {id:'n5f',glyph:'東',scene:'bridge',name:'Compass Bridge',topic:'Directions and positions',items:pick(N5,'上下中外右左東西南北'),
+   intro:'上 points up and 下 points down. Learn 右 (right) and 左 (left) together. The four directions: 東 east, 西 west, 南 south, 北 north.'},
+  {id:'n5g',glyph:'行',scene:'river',name:'Verb River',topic:'Action verbs',items:pick(N5,'見行来食飲言話読書聞買休出入立会'),
+   intro:'Verbs keep the kanji and change the hiragana ending: 食べる, 食べます, 食べた. The kanji carries the meaning, the hiragana the grammar.'},
+  {id:'n5h',glyph:'大',scene:'weather',name:'Weather Hill',topic:'Describing words',items:pick(N5,'大小高安新古長白多少'),
+   intro:'い-adjectives keep い after the kanji: 小さい, 高い, 新しい. Many come in pairs: 大/小, 高/安, 新/古, 多/少.'},
+  {id:'n5i',glyph:'本',scene:'city',name:'Station Town',topic:'Places and things',items:pick(N5,'本車校店駅道社国語'),
+   intro:'Things around town. 本 means book but also "origin": 日本 is the origin of the sun, Japan.'},
+  {id:'n5B',glyph:'城',scene:'castle',name:'N5 Castle',topic:'Final test: all N5 kanji',boss:true,items:[],
+   intro:'Fifteen mixed questions from every N5 stop.'}]},
+{ id:'n4', jp:'N4 漢字', name:'Kanji N4', glyph:'春',
+  intro:'N4 builds on N5. Many new words are two kanji whose meanings add up: 牛 cow + 肉 meat = 牛肉 beef.',
+  stops:[
+  {id:'n4a',glyph:'家',scene:'village',name:'Family House',topic:'Family and people',items:pick(N4,'兄弟姉妹家族親私自医者員主'),
+   intro:'Family words come in pairs: 兄 older brother, 弟 younger brother, 姉 older sister, 妹 younger sister. 姉 and 妹 both have 女 (woman) on the left.'},
+  {id:'n4b',glyph:'春',scene:'sakura',name:'Four Seasons',topic:'Seasons and times of day',items:pick(N4,'春夏秋冬朝昼夕夜曜早'),
+   intro:'The four seasons 春夏秋冬, and the parts of the day: 朝 morning, 昼 noon, 夕 evening, 夜 night.'},
+  {id:'n4c',glyph:'明',scene:'weather',name:'Weather Hill',topic:'Describing words and colours',items:pick(N4,'暑寒明暗重軽強弱悪広近遠赤青黒色'),
+   intro:'More opposite pairs: 暑/寒, 明/暗, 重/軽, 強/弱, 近/遠. Colours like 赤, 青, 黒 become adjectives with い: 赤い.'},
+  {id:'n4d',glyph:'歩',scene:'bamboo',name:'Bamboo Walk',topic:'Daily action verbs',items:pick(N4,'歩走起寝使作持待教習'),
+   intro:'Daily actions. 待 (wait) and 持 (hold) look alike: 待 has 彳 on the left, the "going" side; 持 has 扌, the "hand" side.'},
+  {id:'n4e',glyph:'開',scene:'river',name:'Verb River',topic:'Verb pairs',items:pick(N4,'知思開閉始終送借貸答乗着'),
+   intro:'Learn these in pairs: 開ける open / 閉める close, 始める begin / 終わる end, 借りる borrow / 貸す lend.'},
+  {id:'n4f',glyph:'町',scene:'train',name:'Town & Travel',topic:'Places and getting around',items:pick(N4,'町村県病院館図室屋堂地動転運旅'),
+   intro:'Places and travel. 院 and 館 both mean a building: 病院 is a hospital, 図書館 a library.'},
+  {id:'n4g',glyph:'魚',scene:'market',name:'Fish Market',topic:'Food, animals and things',items:pick(N4,'肉牛魚鳥犬茶飯料理紙服'),
+   intro:'Food and things. Put meanings together: 牛 cow + 肉 meat = 牛肉 beef. 金 gold + 魚 fish = 金魚 goldfish.'},
+  {id:'n4h',glyph:'音',scene:'koi',name:'Art Garden',topic:'Movies, photos and music',items:pick(N4,'映画写真音楽歌'),
+   intro:'映画 movie, 写真 photo, 音楽 music: each is two kanji whose meanings add up. 写 copy + 真 real = a photo.'},
+  {id:'n4i',glyph:'試',scene:'scroll',name:'Exam Hall',topic:'School and tests',items:pick(N4,'文字英質問題試験勉'),
+   intro:'Words for school: 宿題 homework, 質問 question, 試験 exam, 勉強 study.'},
+  {id:'n4B',glyph:'龍',scene:'dragon',name:'Dragon Gate',topic:'Final test: all N4 kanji',boss:true,items:[],
+   intro:'Fifteen mixed questions from every N4 stop.'}]}
+];
+const ALL={}, REGION_OF={};
+REGIONS.forEach(R=>{ R.all=R.stops.flatMap(s=>s.items); R.all.forEach(it=>{ ALL[it.id]=it; REGION_OF[it.id]=R; }); });
+const regionIdx=()=>Math.max(0,REGIONS.findIndex(r=>r.id===state.region));
+const REG=()=>REGIONS[regionIdx()];
+
+/* ================= QUESTIONS ================= */
+const M=it=>state.lang==='en'?it.en:it.mid;
+const M2=it=>state.lang==='en'?it.mid:it.en;
+const WM=it=>state.lang==='en'?it.wen:it.wid;
+const snd=r=>r==='wo'?'o':r;
+function distract(ans,get,pools,skip){ const seen=new Set([ans]),out=[];
+  for(const src of pools) for(const w of shuffle(src)){ if(out.length>=3) break; if(skip&&skip(w)) continue;
+    const v=get(w); if(v&&!seen.has(v)){ seen.add(v); out.push(v); } }
+  return out; }
+function reveal(it){
+  if(it.type==='kana') return `<span class="han">${it.k}</span> = <b>${esc(it.r)}</b>`;
+  if(it.type==='word') return `<span class="han">${it.k}</span> ${esc(it.r)}, ${esc(M(it))}`;
+  return `<span class="han">${it.k}</span> ${esc(M(it))} · <span class="han">${it.w}</span> (${it.wr}) ${esc(WM(it))}`;
+}
+function randType(it,R){ let T;
+  if(it.type==='kana'){ T=['read','read','write','write']; if(voiceOK) T.push('listen','listen'); if(R.id==='kata') T.push('match','match'); }
+  else if(it.type==='word'){ T=['meaning','meaning','pickword','read']; if(voiceOK) T.push('listen'); }
+  else { T=['meaning','meaning','kanji','reading','reading','wordmean']; if(voiceOK) T.push('listen'); }
+  return T[Math.random()*T.length|0]; }
+function makeQ(it,t,pool){
+  const P=[pool,REGION_OF[it.id].all], base={kind:'mc',it,say:it.say,reveal:reveal(it)};
+  const mc=(prompt,answer,get,font,extra,skip)=>({...base,prompt,answer,options:shuffle([answer,...distract(answer,get,P,skip)]),font,...extra});
+  if(t==='type') return {kind:'type',it,say:it.say,typed:'',
+    prompt:it.type==='kana'?'Type the romaji':'Type how to read it',big:it.type==='kanji'?it.w:it.k};
+  if(it.type==='kana'){ const same=x=>x!==it&&snd(x.r)===snd(it.r);
+    if(t==='read') return mc('How do you read this?',it.r,x=>x.r,'ui',{big:it.k});
+    if(t==='write') return mc(`Which one is “${it.r}”?`,it.k,x=>x.k,'jp',{},same);
+    if(t==='match') return mc(`Which katakana sounds like ${it.hira}?`,it.kata,x=>x.kata,'jp',{big:it.hira},same);
+    return mc('Listen, then pick what you hear',it.k,x=>x.k,'jp',{listen:true,speak:it.say,autoplay:true},same); }
+  if(it.type==='word'){
+    if(t==='meaning') return mc('What does this word mean?',M(it),M,'ui',{big:it.k,speak:it.say});
+    if(t==='pickword') return mc(`Which word means “${M(it)}”?`,it.k,x=>x.k,'jp');
+    if(t==='read') return mc('How do you read this word?',it.r,x=>x.r,'ui',{big:it.k});
+    return mc('Listen, then pick the word',it.k,x=>x.k,'jp',{listen:true,speak:it.say,autoplay:true}); }
+  if(t==='meaning') return mc('What does this kanji mean?',M(it),M,'ui',{big:it.k});
+  if(t==='kanji') return mc(`Which kanji means “${M(it)}”?`,it.k,x=>x.k,'jp');
+  if(t==='reading') return mc('How do you read this word?',it.wr,x=>x.wr,'jp',{big:it.w});
+  if(t==='wordmean') return mc('What does this word mean?',WM(it),WM,'ui',{big:it.w,sub:it.wr,speak:it.wr});
+  return mc('Listen, then pick the word',it.w,x=>x.w,'jp',{listen:true,speak:it.wr,autoplay:true},x=>x!==it&&x.wr===it.wr);
+}
+function buildQs(items,pool,n,nType){
+  let ws=shuffle(items); while(ws.length<n) ws=ws.concat(shuffle(items)); ws=ws.slice(0,n);
+  return shuffle(ws.map((it,i)=>makeQ(it,i<nType?'type':randType(it,REGION_OF[it.id]),pool)));
+}
+function makeQuiz(R,S){ return S.boss? buildQs(R.all,R.all,15,2) : buildQs(S.items,S.items,10,2); }
+function fresh(q){ const c={...q,res:undefined,chosen:undefined,typed:''}; if(q.kind==='mc') c.options=shuffle(q.options); return c; }
+
+/* ================= MAP ================= */
+const unlocked=(R,i)=>i===0||(state.stars[R.stops[i-1].id]||0)>0;
+const regionStars=R=>R.stops.reduce((a,s)=>a+(state.stars[s.id]||0),0);
+function renderMap(){
+  quiz=null; const R=REG(), GAP=172, H=R.stops.length*GAP+20;
+  const pts=R.stops.map((S,i)=>({x:50+24*Math.sin(i*1.15),y:20+i*GAP}));
+  let reach=0; R.stops.forEach((S,i)=>{ if(unlocked(R,i)) reach=i; });
+  const path=upto=>pts.slice(0,upto+1).reduce((d,p,i,a)=>i===0?`M${p.x} ${p.y+39}`:d+` C${a[i-1].x} ${a[i-1].y+39+GAP/2},${p.x} ${p.y+39-GAP/2},${p.x} ${p.y+39}`,'');
+  const nodes=R.stops.map((S,i)=>{ const s=state.stars[S.id]||0, un=unlocked(R,i), cls=s?'done':un?'open':'locked', p=pts[i];
+    return `<div class="node ${un?'':'locked-label'}" style="left:${p.x}%;top:${p.y}px">
+      <button class="seal ${cls} ${un&&!s?'cur':''}" data-lv="${i}" ${un?'':'disabled'} aria-label="${S.name}${un?'':', locked'}"><span class="han">${S.glyph}</span></button>
+      ${s?`<div class="stars" aria-label="${s} of 3 stars">${'★'.repeat(s)}<span>${'★'.repeat(3-s)}</span></div>`:''}
+      <div class="nm">${S.name}</div><div class="tp">${S.topic}${S.items.length?` · ${S.items.length}`:''}</div></div>`; }).join('');
+  let here=R.stops.findIndex((S,i)=>unlocked(R,i)&&!state.stars[S.id]); if(here<0) here=R.stops.length-1;
+  const deco=R.stops.map((S,i)=>{ const p=pts[i], left=p.x>=50, big=S.boss, pos=left?'left:4px':'right:4px';
+    let h=`<div class="scene ${big?'big':''}" style="${pos};top:${p.y+(big?-6:4)}px">${SCENES[S.scene]()}</div>`;
+    if(i%2) h+=`<div class="cloud" style="${left?'left:2px':'right:2px'};top:${p.y-34}px">${CLOUD}</div>`;
+    if(i===here) h+=`<div class="walker" style="left:calc(${p.x}% ${left?'+ 44px':'- 98px'});top:${p.y-6}px">${girl(state.stars[S.id]?'happy':'calm')}</div>`;
+    return h; }).join('');
+  const nMiss=Object.keys(state.miss).filter(id=>ALL[id]).length, isKanji=R.id.startsWith('n');
+  const total=REGIONS.reduce((a,r)=>a+regionStars(r),0);
+  app.innerHTML=`<header class="top"><div class="brand"><div class="han">日本語の道</div><small>Nihongo Road · kana & kanji</small></div>
+    <div class="stats">${isKanji?`<button class="chip" data-act="lang" aria-label="Switch meaning language">Arti: <b>${state.lang==='en'?'EN':'ID'}</b></button>`:''}
+    <span class="chip"><b>★</b> ${total} · ${state.xp} XP</span></div></header>
+    <nav class="regions">${REGIONS.map(r=>`<button class="rtab ${r===R?'on':''}" data-act="region" data-v="${r.id}"><span class="han">${r.jp}</span><small>★ ${regionStars(r)}/${r.stops.length*3}</small></button>`).join('')}</nav>
+    <div class="guide map-guide"><div class="buddy">${girl('happy')}</div><p class="bubble"><span class="han">こんにちは！</span> I'm さくら Sakura. ${R.intro}</p></div>
+    <div class="tools"><button class="tool" data-act="list">${isKanji?'Kanji list':R.id==='kata'?'Katakana chart':'Hiragana chart'}</button>${nMiss?`<button class="tool warn" data-act="review">Practise my mistakes (${nMiss})</button>`:''}</div>
+    <div class="map" style="height:${H}px"><svg viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <path d="${path(R.stops.length-1)}" fill="none" stroke="var(--line)" stroke-width="5" stroke-dasharray="1 11" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      ${reach?`<path d="${path(reach)}" fill="none" stroke="var(--jade2)" stroke-opacity=".45" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`:''}
+    </svg>${deco}${nodes}</div>
+    <div class="foot"><button class="link" data-act="reset">Reset progress</button></div>`;
+  const c=app.querySelector('.seal.cur'); if(c&&here>0) c.scrollIntoView({block:'center'}); else window.scrollTo(0,0);
+}
+
+/* ================= CHART / LIST ================= */
+let listOpt={a:false,b:false}, revealed=new Set();
+function renderList(){
+  const R=REG(), isKanji=R.id.startsWith('n');
+  let body;
+  if(!isKanji){
+    body=R.stops.filter(s=>!s.boss).map(S=>`<h3 class="lgroup">${S.name} <small>${S.topic}</small></h3>
+      <div class="kgrid ${S.items[0]&&S.items[0].type==='word'?'words':''}">${S.items.map(it=>{ const hid=listOpt.a&&!revealed.has(it.id);
+        return `<button class="kcell" data-act="kcell" data-id="${esc(it.id)}"><span class="han">${it.k}</span><small class="${hid?'hid':''}">${hid?'':esc(it.type==='word'?it.r+' · '+M(it):it.r)}</small></button>`; }).join('')}</div>`).join('');
+  } else {
+    body=`<div class="row head kr"><span>Kanji</span><span>Readings</span><span>Arti</span></div>`+R.all.map(it=>{
+      const ha=listOpt.a&&!revealed.has(it.id+'a'), hb=listOpt.b&&!revealed.has(it.id+'b');
+      return `<div class="row kr"><button class="lh" data-say="${it.wr}">${it.k}</button>
+        <button class="la ${ha?'hid':''}" data-act="rev" data-k="${esc(it.id)}a">${ha?'':`<span class="on">${it.on}</span><br>${it.kun}`}</button>
+        <button class="la ${hb?'hid':''}" data-act="rev" data-k="${esc(it.id)}b">${hb?'':`${esc(M(it))}<br><small class="han">${it.w}</small> <small>${it.wr}</small>`}</button></div>`; }).join('');
+  }
+  app.innerHTML=`<div class="bar"><button class="x" data-act="map" aria-label="Back to map">×</button>
+    <div class="ltitle">${isKanji?R.name+' list':R.name+' chart'}<small>${R.all.length} ${isKanji?'kanji':'items'} · tap to hear</small></div></div>
+    <div class="screen list"><div class="toggles"><button class="tog ${listOpt.a?'on':''}" data-act="hidea">${isKanji?'Hide readings':'Hide romaji'}</button>
+      ${isKanji?`<button class="tog ${listOpt.b?'on':''}" data-act="hideb">Hide arti</button>`:''}</div>
+    <p class="hint">Cover a column, test yourself, then tap to check.</p>${body}</div>`;
+}
+
+/* ================= LEARN ================= */
+function cardHTML(R,it){
+  const hear=t=>canSpeak?`<div class="speakrow"><button class="speak" data-say="${t}">${SPK} Hear it</button><button class="speak" data-say="${t}" data-slow="1">Slower</button></div>`:'';
+  if(it.type==='kana') return `<div class="card"><button class="big han" data-say="${it.say}" style="font-size:${bigSize(it.k)}px">${it.k}</button>
+    <div class="py">${it.r}</div><div class="twin">${R.id==='kata'?'Hiragana':'Katakana'} twin: <span class="han">${R.id==='kata'?it.hira:it.kata}</span></div>
+    ${it.note?`<div class="note">${it.note}</div>`:''}${hear(it.say)}</div>`;
+  if(it.type==='word') return `<div class="card"><button class="big han" data-say="${it.say}" style="font-size:${bigSize(it.k)}px">${it.k}</button>
+    <div class="py">${it.r}</div><div class="en">${esc(M(it))}</div><div class="en2">${esc(M2(it))}</div>${hear(it.say)}</div>`;
+  return `<div class="card"><div class="no-tag">${it.lv}</div><button class="big han" data-say="${it.wr}" style="font-size:120px">${it.k}</button>
+    <div class="en">${esc(M(it))}</div><div class="en2">${esc(M2(it))}</div>
+    <div class="rds"><div class="rd"><span>On</span><b class="han">${it.on}</b></div><div class="rd"><span>Kun</span><b class="han">${it.kun}</b></div></div>
+    <div class="ex"><small>Example</small><div class="exw han">${it.w}</div><div class="exr"><span class="han">${it.wr}</span> · ${it.r}</div><div class="exm">${esc(WM(it))}</div></div>
+    ${hear(it.wr)}</div>`;
+}
+function renderLearn(si,k=0){
+  const R=REG(), S=R.stops[si]; cur={si,k}; const it=S.items[k], n=S.items.length, last=k===n-1;
+  app.innerHTML=`<div class="bar"><button class="x" data-act="map" aria-label="Back to map">×</button>
+    <div class="prog"><i style="width:${(k+1)/n*100}%"></i></div><span class="count">${k+1}/${n}</span></div>
+    <div class="screen">${k===0?`<div class="guide"><div class="buddy">${girl('calm')}</div><p class="bubble">${S.intro}</p></div>`:''}
+      ${cardHTML(R,it)}${!last?`<button class="link skip" data-act="quiz">Skip to challenge</button>`:''}</div>
+    <div class="dock"><button class="btn ghost" data-act="prev" ${k===0?'disabled':''}>Back</button>
+      <button class="btn" data-act="next">${last?'Start challenge':'Next'}</button></div>`;
+  window.scrollTo(0,0);
+}
+
+/* ================= QUIZ ================= */
+function begin(S,queue,hearts,extra){ quiz={S,queue,total:queue.length,hearts,maxH:hearts,mistakes:0,right:0,combo:0,xp:0,answered:false,...extra}; renderQuiz(); }
+function startQuiz(si){ const R=REG(), S=R.stops[si]; begin(S,makeQuiz(R,S),S.boss?5:3,{si}); }
+function startReview(){
+  const its=Object.entries(state.miss).sort((a,b)=>b[1]-a[1]).map(([id])=>ALL[id]).filter(Boolean).slice(0,10);
+  if(!its.length) return renderMap();
+  begin({id:'review',name:'Mistake practice',glyph:'復'},buildQs(its,its,Math.min(10,Math.max(5,its.length)),Math.min(2,its.length)),3,{review:true});
+}
+function mcHTML(q){
+  const A=quiz.answered; let top='';
+  if(q.listen) top=`<button class="play" data-say="${esc(q.speak)}" aria-label="Play the sound again">${SPK}</button><div class="speakrow"><button class="speak" data-say="${esc(q.speak)}" data-slow="1">Play slower</button></div>`;
+  else if(q.big) top=`<div class="qbig"><span class="han" style="font-size:${Math.round(bigSize(q.big)*.85)}px">${esc(q.big)}</span>${q.sub?`<small class="han">${esc(q.sub)}</small>`:''}
+      ${q.speak&&canSpeak?`<button class="mini" data-say="${esc(q.speak)}" aria-label="Play sound">${SPK}</button>`:''}</div>`;
+  const two=q.font==='jp'?q.options.every(o=>[...o].length<=6):q.options.every(o=>o.length<=14);
+  const opts=q.options.map((o,i)=>{ let c='opt'+(q.font==='jp'?' hanopt':'');
+    if(A){ if(o===q.answer) c+=' right'; else if(i===q.chosen) c+=' wrong'; }
+    return `<button class="${c}" data-act="opt" data-v="${i}" ${A?'disabled':''}>${esc(o)}</button>`; }).join('');
+  return `${top}<div class="opts ${two?'two':''}">${opts}</div>`;
+}
+function typeHTML(q){
+  const A=quiz.answered, t=q.it.type;
+  const hint=t==='kana'?'Use standard romaji: shi, chi, tsu, fu.':t==='word'?'Long vowels can be typed twice or with a mark: koohii or kōhī.':'Type the reading in romaji (e.g. nihon), or in hiragana.';
+  return `<div class="qbig"><span class="han" style="font-size:${Math.round(bigSize(q.big)*.85)}px">${q.big}</span></div>
+    <input id="pyin" class="pyin ${A?q.res:''}" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+      placeholder="${t==='kana'?'e.g. shi':'e.g. nihon'}" value="${esc(q.typed)}" ${A?'disabled':''} aria-label="Reading">
+    <p class="hint">${hint}</p>${A?'':`<div class="dock"><button class="btn" data-act="checkpy">Check</button></div>`}`;
+}
+const PRAISE=[['すごい！','Sugoi! Amazing'],['せいかい！','Seikai! Correct'],['よくできました！','Yoku dekimashita! Well done']];
+function sheetHTML(q){
+  const r=q.res, it=q.it;
+  const [jp,en]=r==='right'?PRAISE[Math.random()*3|0]:['がんばって！','Ganbatte! Keep going'];
+  let body;
+  if(q.kind==='type'){
+    const ans=it.type==='kanji'?`<span class="han">${it.w}</span> = <span class="han">${it.wr}</span> (${it.r}), ${esc(WM(it))}`:it.type==='word'?`<b>${it.r}</b>, ${esc(M(it))}`:`<b>${it.r}</b>`;
+    body=(r==='right'?'':'Answer: ')+ans;
+  } else body=(r==='right'?'':`Answer: <b>${q.font==='jp'?`<span class="han">${esc(q.answer)}</span>`:esc(q.answer)}</b><br>`)+q.reveal;
+  return `<div class="sheet ${r==='right'?'ok':'bad'}" role="status"><div class="sheet-top"><div class="buddy">${girl(r==='right'?'happy':'oops')}</div><div class="sheet-txt">
+    <div class="fb-h"><span class="han">${jp}</span><small>${en}</small>${r==='right'?`<span class="xp">+${q.gain} XP</span>`:''}</div>
+    <div class="fb-b">${body}</div></div></div>
+    <button class="btn ${r==='right'?'':'red'}" data-act="continue">Continue</button></div>`;
+}
+function renderQuiz(){
+  const Q=quiz, q=Q.queue[0];
+  app.innerHTML=`<div class="bar"><button class="x" data-act="map" aria-label="Quit challenge">×</button>
+    <div class="prog"><i style="width:${Q.right/Q.total*100}%"></i></div>
+    <span class="hearts" aria-label="${Q.hearts} hearts left">${'♥'.repeat(Q.hearts)}<span class="lost">${'♥'.repeat(Q.maxH-Q.hearts)}</span></span></div>
+    <div class="screen">${Q.combo>=3?`<div class="combo">Combo ×${Q.combo}</div>`:''}
+      <h2 class="prompt">${esc(q.prompt)}</h2>${q.kind==='type'?typeHTML(q):mcHTML(q)}</div>
+    ${Q.answered?sheetHTML(q):''}`;
+  if(!Q.answered){ window.scrollTo(0,0); if(q.autoplay) setTimeout(()=>say(q.speak),400);
+    const inp=document.getElementById('pyin'); if(inp) inp.focus({preventScroll:true}); }
+}
+function grade(res){
+  const Q=quiz, q=Q.queue[0], ok=res==='right', id=q.it.id; Q.answered=true; q.res=res;
+  if(ok){ Q.right++; Q.combo++; q.gain=10+(Q.combo>=3?5:0); Q.xp+=q.gain; if(Q.review) delete state.miss[id]; }
+  else { Q.combo=0; state.miss[id]=(state.miss[id]||0)+1; Q.hearts--; Q.mistakes++; if(Q.hearts>0) Q.queue.push(fresh(q)); }
+  save(); beep(ok); setTimeout(()=>say(q.say),ok?200:350); renderQuiz();
+}
+function typedOK(typed,it){
+  const t=typed.trim(); if(!t) return null;
+  if(it.type==='kana'){ const a=t.toLowerCase().replace(/[^a-z]/g,''); return [it.r,...it.alt].includes(a)||loose(a)===loose(it.r); }
+  if(it.type==='kanji'&&/[぀-ヿ]/.test(t)) return toHira(t.replace(/\s/g,''))===it.wr;
+  return loose(t)===loose(it.r);
+}
+function checkTyped(){
+  const q=quiz.queue[0], inp=document.getElementById('pyin'); if(!inp||quiz.answered) return;
+  q.typed=inp.value; const ok=typedOK(q.typed,q.it); if(ok===null){ inp.focus(); return; }
+  grade(ok?'right':'wrong');
+}
+function next(){ const Q=quiz; Q.queue.shift(); Q.answered=false; if(Q.hearts<=0||!Q.queue.length) finish(); else renderQuiz(); }
+
+/* ================= RESULT ================= */
+function finish(){
+  const Q=quiz, S=Q.S, failed=Q.hearts<=0; state.xp+=Q.xp;
+  if(Q.review){ save(); const left=Object.keys(state.miss).filter(id=>ALL[id]).length;
+    app.innerHTML=`<div class="result"><div class="stampwrap"><div class="stamp han in">復</div><div class="buddy">${girl(left?'calm':'happy')}</div></div>
+      <h2>${left?'Good practice':'Every mistake fixed'}</h2><p>+${Q.xp} XP. ${left?`${left} item${left>1?'s':''} still to practise.`:'Your mistake list is empty.'}</p>
+      <div class="actions">${left?'<button class="btn" data-act="review">Practise again</button><button class="link" data-act="map">Back to map</button>':'<button class="btn" data-act="map">Back to map</button>'}</div></div>`;
+    window.scrollTo(0,0); return; }
+  let s=0; if(!failed){ s=Q.mistakes===0?3:Q.mistakes===1?2:1; state.stars[S.id]=Math.max(state.stars[S.id]||0,s); }
+  save(); const R=REG(), nextS=R.stops[Q.si+1];
+  app.innerHTML=failed
+    ? `<div class="result fail"><div class="stampwrap"><div class="stamp han">再</div><div class="buddy">${girl('oops')}</div></div><h2>Out of hearts</h2>
+        <p>もういちど (mō ichido), one more time. Missed items are saved in "Practise my mistakes".</p>
+        <div class="actions"><button class="btn" data-act="retry">Try again</button>${S.boss?'':'<button class="btn ghost" data-act="cards">Review the cards</button>'}
+        <button class="link" data-act="map">Back to map</button></div></div>`
+    : `<div class="result"><div class="stampwrap"><div class="stamp han in">${S.glyph}</div><div class="buddy">${girl('happy')}</div></div>
+        ${S.boss?`<div class="dragon-win">${SCENES[S.scene]()}</div>`:''}
+        <h2>${S.boss?`合格！ ${R.name} passed`:S.name+' cleared'}</h2>
+        <div class="bigstars" aria-label="${s} of 3 stars">${'★'.repeat(s)}<span>${'★'.repeat(3-s)}</span></div>
+        <p>+${Q.xp} XP. ${Q.mistakes?`${Q.mistakes} mistake${Q.mistakes>1?'s':''}; replay for 3 stars.`:'A perfect run.'}</p>
+        <div class="actions"><button class="btn" data-act="map">${nextS?'Continue to '+nextS.name:'Back to map'}</button>
+        <button class="link" data-act="retry">Play again</button></div></div>`;
+  window.scrollTo(0,0);
+}
+
+/* ================= EVENTS ================= */
+function openStop(i){ const S=REG().stops[i]; if(S.boss) startQuiz(i); else renderLearn(i,0); }
+app.addEventListener('click',e=>{
+  const b=e.target.closest('button'); primeSpeech(); if(!b||b.disabled) return;
+  if(b.dataset.say){ say(b.dataset.say,!!b.dataset.slow); if(!b.dataset.act) return; }
+  if(b.dataset.lv!==undefined) return openStop(+b.dataset.lv);
+  const v=+b.dataset.v, q=quiz&&quiz.queue[0];
+  switch(b.dataset.act){
+    case 'map': if(canSpeak) speechSynthesis.cancel(); renderMap(); break;
+    case 'region': state.region=b.dataset.v; save(); renderMap(); window.scrollTo(0,0); break;
+    case 'prev': renderLearn(cur.si,cur.k-1); break;
+    case 'next': cur.k===REG().stops[cur.si].items.length-1?startQuiz(cur.si):renderLearn(cur.si,cur.k+1); break;
+    case 'quiz': startQuiz(cur.si); break;
+    case 'opt': if(quiz.answered) return; q.chosen=v; grade(q.options[v]===q.answer?'right':'wrong'); break;
+    case 'checkpy': checkTyped(); break;
+    case 'continue': next(); break;
+    case 'retry': quiz.review?startReview():startQuiz(quiz.si); break;
+    case 'cards': renderLearn(quiz.si,0); break;
+    case 'review': startReview(); break;
+    case 'list': revealed.clear(); renderList(); window.scrollTo(0,0); break;
+    case 'hidea': listOpt.a=!listOpt.a; revealed.clear(); renderList(); break;
+    case 'hideb': listOpt.b=!listOpt.b; revealed.clear(); renderList(); break;
+    case 'kcell': { const it=ALL[b.dataset.id]; say(it.say); if(listOpt.a&&!revealed.has(it.id)){ revealed.add(it.id); renderList(); } break; }
+    case 'rev': { const k=b.dataset.k; if(!b.classList.contains('hid')) return; revealed.add(k); renderList(); const it=ALL[k.slice(0,-1)]; if(it) say(it.wr); break; }
+    case 'lang': state.lang=state.lang==='en'?'id':'en'; save(); renderMap(); break;
+    case 'reset': if(confirm('Reset all stars, XP and mistakes?')){ state={stars:{},xp:0,miss:{},lang:state.lang,region:state.region}; save(); renderMap(); } break;
+  }
+});
+app.addEventListener('input',e=>{ if(e.target.id==='pyin'&&quiz) quiz.queue[0].typed=e.target.value; });
+app.addEventListener('keydown',e=>{ if(e.target.id==='pyin'&&e.key==='Enter'){ e.preventDefault(); checkTyped(); } });
+
+load().then(renderMap);
+
+</script>
+</body>
+</html>
